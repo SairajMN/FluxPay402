@@ -143,27 +143,27 @@ fluxpay-nexus/
 
 ### Day 1: Core Infrastructure
 - [x] Avail Nexus SDK integration
-- [x] Smart contract deployment
-- [x] x402 gateway skeleton
-- [x] Basic intent creation
+- [ ] Smart contract deployment
+- [ ] x402 gateway skeleton
+- [ ] Basic intent creation
 
 ### Day 2: Payment Flow Implementation
-- [x] Full x402 challenge-response cycle
-- [x] Provider proxy system
-- [x] Receipt signing & validation
-- [x] Basic settlement logic
+- [ ] Full x402 challenge-response cycle
+- [ ] Provider proxy system
+- [ ] Receipt signing & validation
+- [ ] Basic settlement logic
 
 ### Day 3: Advanced Features
-- [x] OpenRouter AI metering integration
-- [x] Cross-chain settlement
-- [x] Automatic refund system
-- [x] Receipt anchoring to Avail DA
+- [ ] OpenRouter AI metering integration
+- [ ] Cross-chain settlement
+- [ ] Automatic refund system
+- [ ] Receipt anchoring to Avail DA
 
 ### Day 4: UX & Testing
-- [x] User dashboard (wallet connection, intents, receipts)
-- [x] Provider dashboard (registration, APIs, revenue)
-- [x] End-to-end testing
-- [x] Documentation & pitch deck
+- [ ] User dashboard (wallet connection, intents, receipts)
+- [ ] Provider dashboard (registration, APIs, revenue)
+- [ ] End-to-end testing
+- [ ] Documentation & pitch deck
 
 ## 🎯 Demo Scenario (Must Work)
 
@@ -214,9 +214,6 @@ fluxpay-nexus/
 - **AI-native metering** with automatic refunds
 - **Receipt verifiability** via blockchain anchoring
 
-## 🤝 Contributing
-
-We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ### Development Setup
 1. Fork the repository
@@ -239,10 +236,10 @@ npm run test:e2e
 
 ## 📞 Contact & Resources
 
-- **Website**: [https://fluxpaynexus.com](https://fluxpaynexus.com)
+- **Website**: [ex : https://fluxpaynexus.com] ()
 - **Documentation**: See `docs/` directory
 - **Pitch Deck**: `pitch/FluxPay-Nexus-Deck.md`
-- **Team**: [@saira](https://github.com/saira) - Lead Developer
+- **Team**: [@sairaj](https://github.com/SairajMN) - Lead Developer
 
 ### Community
 - **Twitter**: [@FluxPayNexus](https://twitter.com/FluxPayNexus)
@@ -255,10 +252,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
+- **Coinbase**: For pioneering work on x402 implementations
+- **Ethereum Foundation**: For the HTTP 402 protocol specification
 - **Avail Project**: For Nexus unified balances and DA anchoring
 - **OpenRouter**: For AI model access and metering APIs
-- **Ethereum Foundation**: For the HTTP 402 protocol specification
-- **Coinbase**: For pioneering work on x402 implementations
+
+
 
 ---
 
