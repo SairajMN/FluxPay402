@@ -143,7 +143,7 @@ fluxpay-nexus/
 
 ### Day 1: Core Infrastructure
 - [x] Avail Nexus SDK integration
-- [ ] Smart contract deployment
+- [x] Smart contract deployment
 - [ ] x402 gateway skeleton
 - [ ] Basic intent creation
 
