@@ -144,12 +144,12 @@ fluxpay-nexus/
 ### Day 1: Core Infrastructure
 - [x] Avail Nexus SDK integration
 - [x] Smart contract deployment
-- [ ] x402 gateway skeleton
-- [ ] Basic intent creation
+- [x] x402 gateway skeleton
+- [x] Basic intent creation
 
 ### Day 2: Payment Flow Implementation
-- [ ] Full x402 challenge-response cycle
-- [ ] Provider proxy system
+- [x] Full x402 challenge-response cycle
+- [x] Provider proxy system
 - [ ] Receipt signing & validation
 - [ ] Basic settlement logic
 
