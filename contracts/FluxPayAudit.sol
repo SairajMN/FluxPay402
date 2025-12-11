@@ -82,12 +82,12 @@ contract FluxPayAudit is AccessControl {
      * @param usedAmount Actual amount transferred
      * @param nexusTx Transaction hash/ID from Nexus
      */
-    function recordSettlement(
+    function recordSettlement (
         bytes32 intentId,
         address provider,
         uint256 usedAmount,
         bytes calldata nexusTx
-    ) external onlyGateway {
+    ) public onlyGateway {
         require(!intents[intentId].settled, "Already settled");
         require(!intents[intentId].refunded, "Already refunded");
         require(usedAmount <= intents[intentId].lockedAmount, "Used more than locked");

@@ -19,7 +19,7 @@ contract ProviderRegistry is Ownable {
     }
 
     struct PricingRule {
-        string endpointHash; // Hash of endpoint + params for uniqueness
+        bytes32 endpointHash; // Hash of endpoint + params for uniqueness
         uint256 minBudget; // Minimum USDC locked (in wei/usdc smallest units)
         uint256 maxBudget; // Maximum allowd (0 = unlimited)
         uint256 basePrice; // Wei per call
@@ -29,7 +29,7 @@ contract ProviderRegistry is Ownable {
     }
 
     mapping(address => Provider) public providers;
-    mapping(string => PricingRule) public pricingRules; // endpointHash => rule
+    mapping(bytes32 => PricingRule) public pricingRules; // endpointHash => rule
     mapping(address => bool) public authorizedGateways;
 
     address[] public providerList;
@@ -37,7 +37,7 @@ contract ProviderRegistry is Ownable {
     event ProviderRegistered(address indexed provider, string name, string endpoint);
     event ProviderUpdated(address indexed provider, string newEndpoint);
     event ProviderDeactivated(address indexed provider);
-    event PricingRuleSet(string indexed endpointHash, uint256 basePrice);
+    event PricingRuleSet(bytes32 indexed endpointHash, uint256 basePrice);
     event GatewayAuthorized(address indexed gateway);
     event GatewayRevoked(address indexed gateway);
 
@@ -55,7 +55,7 @@ contract ProviderRegistry is Ownable {
 
     /**
      * @dev Register a new provider
-     * @param name Human-readable name
+     * @param name  name
      * @param endpoint Base API endpoint
      * @param publicKeyHash Hash of public key for receipt verification
      */
@@ -115,7 +115,7 @@ contract ProviderRegistry is Ownable {
      * @param slaTimeout SLA timeout in seconds
      */
     function setPricingRule(
-        string calldata endpointHash,
+        bytes32 endpointHash,
         uint256 minBudget,
         uint256 maxBudget,
         uint256 basePrice,
@@ -141,7 +141,7 @@ contract ProviderRegistry is Ownable {
     /**
      * @dev Get pricing for an endpoint
      */
-    function getPricing(string calldata endpointHash) external view returns (PricingRule memory) {
+    function getPricing(bytes32 endpointHash) external view returns (PricingRule memory) {
         return pricingRules[endpointHash];
     }
 
@@ -155,9 +155,16 @@ contract ProviderRegistry is Ownable {
         bytes32 receiptHash,
         bytes memory signature
     ) external view returns (bool) {
-        bytes32 messageHash = keccak256(abi.encodePacked(intentId, provider, receiptHash));
+        string memory prefix = "\x19Ethereum Signed Message:\n84";
+        bytes32 messageHash = keccak256(abi.encodePacked(prefix, intentId, provider, receiptHash));
         address recovered = recoverSigner(messageHash, signature);
         return recovered == provider && providers[provider].isActive;
+    }
+
+    function getRecovered(bytes32 intentId, address provider, bytes32 receiptHash, bytes memory signature) external view returns (address) {
+        string memory prefix = "\x19Ethereum Signed Message:\n84";
+        bytes32 messageHash = keccak256(abi.encodePacked(prefix, intentId, provider, receiptHash));
+        return recoverSigner(messageHash, signature);
     }
 
     /**
