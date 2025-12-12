@@ -1,7 +1,7 @@
 import { useWeb3 } from './wallet.js'
 
 export function WalletConnect() {
-  const { account, isConnected, isConnecting, connectWallet, disconnectWallet, isMetaMaskInstalled } = useWeb3()
+  const { account, isConnected, isConnecting, connectWallet, disconnectWallet, isMetaMaskInstalled, isPhantomInstalled } = useWeb3()
 
   if (isConnected && account) {
     return (
@@ -33,20 +33,46 @@ export function WalletConnect() {
   }
 
   return (
-    <button
-      onClick={connectWallet}
-      disabled={isConnecting}
-      style={{
-        backgroundColor: isConnecting ? '#ccc' : '#007bff',
-        color: 'white',
-        border: 'none',
-        padding: '10px 20px',
-        borderRadius: '5px',
-        cursor: isConnecting ? 'not-allowed' : 'pointer',
-        fontSize: '16px'
-      }}
-    >
-      {isConnecting ? 'Connecting...' : isMetaMaskInstalled ? 'Connect MetaMask' : 'Install MetaMask'}
-    </button>
+    <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+      {/* MetaMask Button */}
+      <button
+        onClick={() => connectWallet('metamask')}
+        disabled={isConnecting}
+        style={{
+          backgroundColor: isConnecting ? '#ccc' : '#F6851B',
+          color: 'white',
+          border: 'none',
+          padding: '10px 20px',
+          borderRadius: '5px',
+          cursor: isConnecting ? 'not-allowed' : 'pointer',
+          fontSize: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}
+      >
+        🦊 {isConnecting ? 'Connecting...' : 'MetaMask'}
+      </button>
+
+      {/* Phantom Button */}
+      <button
+        onClick={() => connectWallet('phantom')}
+        disabled={isConnecting}
+        style={{
+          backgroundColor: isConnecting ? '#ccc' : '#AB9FF2',
+          color: 'white',
+          border: 'none',
+          padding: '10px 20px',
+          borderRadius: '5px',
+          cursor: isConnecting ? 'not-allowed' : 'pointer',
+          fontSize: '16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}
+      >
+        👻 {isConnecting ? 'Connecting...' : 'Phantom'}
+      </button>
+    </div>
   )
 }

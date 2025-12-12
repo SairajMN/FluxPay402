@@ -13,37 +13,75 @@ export function Web3Provider({ children }) {
     return typeof window !== 'undefined' && window.ethereum && window.ethereum.isMetaMask;
   };
 
-  // Connect to MetaMask
-  const connectWallet = async () => {
-    if (!isMetaMaskInstalled()) {
-      alert('Please install MetaMask to use this dApp!');
-      window.open('https://metamask.io/', '_blank');
-      return;
-    }
+  // Check if Phantom is installed
+  const isPhantomInstalled = () => {
+    return typeof window !== 'undefined' && window.solana && window.solana.isPhantom;
+  };
 
+  // Connect to MetaMask or Phantom
+  const connectWallet = async (walletType = 'metamask') => {
     setIsConnecting(true);
+
     try {
-      // Request account access
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      const ethersProvider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await ethersProvider.getSigner();
-
-      setAccount(accounts[0]);
-      setProvider(ethersProvider);
-
-      // Listen for account changes
-      window.ethereum.on('accountsChanged', (accounts) => {
-        if (accounts.length > 0) {
-          setAccount(accounts[0]);
-        } else {
-          setAccount(null);
+      if (walletType === 'metamask') {
+        if (!isMetaMaskInstalled()) {
+          alert('Please install MetaMask to use this dApp!');
+          window.open('https://metamask.io/', '_blank');
+          return;
         }
-      });
 
-      // Listen for chain changes
-      window.ethereum.on('chainChanged', () => {
-        window.location.reload();
-      });
+        // Request account access for MetaMask
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const ethersProvider = new ethers.BrowserProvider(window.ethereum);
+
+        setAccount(accounts[0]);
+        setProvider(ethersProvider);
+
+        // Listen for account changes
+        window.ethereum.on('accountsChanged', (accounts) => {
+          if (accounts.length > 0) {
+            setAccount(accounts[0]);
+          } else {
+            setAccount(null);
+          }
+        });
+
+        // Listen for chain changes
+        window.ethereum.on('chainChanged', () => {
+          window.location.reload();
+        });
+
+      } else if (walletType === 'phantom') {
+        if (!isPhantomInstalled()) {
+          alert('Please install Phantom wallet to use this dApp!');
+          window.open('https://phantom.app/', '_blank');
+          return;
+        }
+
+        // Connect to Phantom for Solana
+        try {
+          const resp = await window.solana.connect();
+          const publicKey = resp.publicKey.toString();
+
+          setAccount(publicKey);
+          setProvider({ isPhantom: true, phantom: window.solana });
+
+          // Listen for account changes
+          window.solana.on('accountChanged', (publicKey) => {
+            if (publicKey) {
+              setAccount(publicKey.toString());
+            } else {
+              setAccount(null);
+            }
+          });
+
+        } catch (err) {
+          console.error('Error connecting to Phantom:', err);
+          alert('Error connecting to Phantom wallet. Please try again.');
+          return;
+        }
+      }
+
     } catch (error) {
       console.error('Error connecting wallet:', error);
       alert('Error connecting wallet. Please try again.');
@@ -74,7 +112,8 @@ export function Web3Provider({ children }) {
     isConnecting,
     connectWallet,
     disconnectWallet,
-    isMetaMaskInstalled: isMetaMaskInstalled()
+    isMetaMaskInstalled: isMetaMaskInstalled(),
+    isPhantomInstalled: isPhantomInstalled()
   };
 
   return (

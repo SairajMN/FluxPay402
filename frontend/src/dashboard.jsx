@@ -8,7 +8,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('Explain how FluxPay x402 micropayments work');
-  const { account, isConnected } = useWeb3();
+  const { isConnected } = useWeb3();
 
   // Test basic HTTP 402 payment flow
   const testPayment = async () => {
