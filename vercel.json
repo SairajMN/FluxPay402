@@ -1,14 +1,14 @@
 {
   "version": 2,
+  "env": {
+    "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
+  },
   "builds": [
     {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
         "distDir": "build"
-      },
-      "env": {
-        "NPM_CONFIG_LEGACY_PEER_DEPS": "true"
       }
     },
     {
