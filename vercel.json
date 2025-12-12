@@ -1,17 +1,12 @@
 {
   "version": 2,
-  "installCommand": "npm install --legacy-peer-deps",
   "builds": [
     {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "installCommand": "npm install --legacy-peer-deps",
-        "distDir": "frontend/build"
+        "distDir": "build"
       }
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
