@@ -1,7 +1,7 @@
 import { useWeb3 } from './wallet.js'
 
 export function WalletConnect() {
-  const { account, isConnected, isConnecting, connectWallet, disconnectWallet, isMetaMaskInstalled, isPhantomInstalled } = useWeb3()
+  const { account, isConnected, isConnecting, connectWallet, disconnectWallet } = useWeb3()
 
   if (isConnected && account) {
     return (
