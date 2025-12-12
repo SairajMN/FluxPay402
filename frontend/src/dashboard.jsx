@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { WalletConnect } from './WalletConnect.jsx';
-import { useAccount } from 'wagmi';
+import { useWeb3 } from './wallet.js';
 
 const Dashboard = () => {
   const [paymentResult, setPaymentResult] = useState(null);
@@ -8,7 +8,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('Explain how FluxPay x402 micropayments work');
-  const { address, isConnected } = useAccount();
+  const { account, isConnected } = useWeb3();
 
   // Test basic HTTP 402 payment flow
   const testPayment = async () => {

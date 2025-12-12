@@ -1,12 +1,9 @@
-import { useWeb3Modal } from '@web3modal/wagmi/react'
-import { useAccount, useDisconnect } from 'wagmi'
+import { useWeb3 } from './wallet.js'
 
 export function WalletConnect() {
-  const { open } = useWeb3Modal()
-  const { address, isConnected } = useAccount()
-  const { disconnect } = useDisconnect()
+  const { account, isConnected, isConnecting, connectWallet, disconnectWallet, isMetaMaskInstalled } = useWeb3()
 
-  if (isConnected) {
+  if (isConnected && account) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <span style={{
@@ -16,10 +13,10 @@ export function WalletConnect() {
           borderRadius: '4px',
           fontSize: '14px'
         }}>
-          Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+          Connected: {account.slice(0, 6)}...{account.slice(-4)}
         </span>
         <button
-          onClick={() => disconnect()}
+          onClick={disconnectWallet}
           style={{
             backgroundColor: '#dc3545',
             color: 'white',
@@ -37,18 +34,19 @@ export function WalletConnect() {
 
   return (
     <button
-      onClick={() => open()}
+      onClick={connectWallet}
+      disabled={isConnecting}
       style={{
-        backgroundColor: '#007bff',
+        backgroundColor: isConnecting ? '#ccc' : '#007bff',
         color: 'white',
         border: 'none',
         padding: '10px 20px',
         borderRadius: '5px',
-        cursor: 'pointer',
+        cursor: isConnecting ? 'not-allowed' : 'pointer',
         fontSize: '16px'
       }}
     >
-      Connect Wallet
+      {isConnecting ? 'Connecting...' : isMetaMaskInstalled ? 'Connect MetaMask' : 'Install MetaMask'}
     </button>
   )
 }

@@ -6,12 +6,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "^5.0.1",
-    "ethers": "^6.8.0",
-    "@web3modal/wagmi": "^3.5.0",
-    "wagmi": "^1.4.0",
-    "@wagmi/core": "^1.4.0",
-    "@wagmi/vue": "^0.0.34",
-    "viem": "^1.19.0"
+    "ethers": "^6.8.0"
   },
   "scripts": {
     "start": "react-scripts start",
