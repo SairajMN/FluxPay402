@@ -236,7 +236,7 @@ npm run test:e2e
 
 ## 📞 Contact & Resources
 
-- **Website**: [ex : https://fluxpaynexus.com] ()
+- **Website**: [https://fluxpay402.vercel.app/] ()
 - **Documentation**: See `docs/` directory
 - **Pitch Deck**: `pitch/FluxPay-Nexus-Deck.md`
 - **Team**: [@sairaj](https://github.com/SairajMN) - Lead Developer
