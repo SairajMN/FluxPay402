@@ -7,9 +7,15 @@
 const crypto = require('crypto');
 const ethers = require('ethers');
 
-// Import contract ABIs
-const FluxPayAuditABI = require('../artifacts/contracts/FluxPayAudit.sol/FluxPayAudit.json');
-const ProviderRegistryABI = require('../artifacts/contracts/ProviderRegistry.sol/ProviderRegistry.json');
+// Import contract ABIs (try catch for missing artifacts)
+let FluxPayAuditABI, ProviderRegistryABI;
+try {
+  FluxPayAuditABI = require('../artifacts/contracts/FluxPayAudit.sol/FluxPayAudit.json');
+  ProviderRegistryABI = require('../artifacts/contracts/ProviderRegistry.sol/ProviderRegistry.json');
+} catch (e) {
+  console.warn('⚠️ Contract artifacts not found, using mock mode');
+  FluxPayAuditABI = ProviderRegistryABI = null;
+}
 
 class NexusAdapter {
   constructor(config = {}) {

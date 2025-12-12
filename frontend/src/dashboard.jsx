@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WalletConnect } from './WalletConnect.jsx';
 import { useWeb3 } from './wallet.js';
 
@@ -8,7 +8,38 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiPrompt, setAiPrompt] = useState('Explain how FluxPay x402 micropayments work');
-  const { isConnected } = useWeb3();
+  const [balance, setBalance] = useState(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+  const { isConnected, account } = useWeb3();
+
+  // Fetch balance when connected
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (!isConnected || !account) {
+        setBalance(null);
+        return;
+      }
+
+      setBalanceLoading(true);
+      try {
+        const response = await fetch(`/api/user/${account}/balance`);
+        if (response.ok) {
+          const balanceData = await response.json();
+          setBalance(balanceData);
+        } else {
+          console.error('Failed to fetch balance:', response.status);
+          setBalance({ error: 'Failed to load balance' });
+        }
+      } catch (error) {
+        console.error('Error fetching balance:', error);
+        setBalance({ error: 'Network error' });
+      } finally {
+        setBalanceLoading(false);
+      }
+    };
+
+    fetchBalance();
+  }, [isConnected, account]);
 
   // Test basic HTTP 402 payment flow
   const testPayment = async () => {
@@ -101,6 +132,35 @@ const Dashboard = () => {
         <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
           <WalletConnect />
         </div>
+
+        {isConnected && (
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '1.5rem',
+            borderRadius: '8px',
+            border: '2px solid #e9ecef',
+            marginBottom: '2rem'
+          }}>
+            <h2 style={{ color: '#333', marginTop: 0 }}>USDC Balance</h2>
+            <p style={{ color: '#666' }}>Your unified FluxPay balance across all chains</p>
+            <div style={{
+              fontSize: '2rem',
+              fontWeight: 'bold',
+              color: '#28a745',
+              textAlign: 'center',
+              padding: '1rem'
+            }}>
+              {balanceLoading ? 'Loading...' :
+               balance?.error ? balance.error :
+               balance?.totalAmount ? `${balance.totalAmount} USDC` : '0.00 USDC'}
+            </div>
+            {balance?.breakdown && !balanceLoading && !balance?.error && (
+              <div style={{ fontSize: '0.8rem', color: '#666', textAlign: 'center', marginTop: '-0.5rem' }}>
+                Ethereum: {balance.breakdown.ethereum} | Arbitrum: {balance.breakdown.arbitrum} | Polygon: {balance.breakdown.polygon}
+              </div>
+            )}
+          </div>
+        )}
 
         <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: isConnected ? '1fr 1fr' : '1fr' }}>
 

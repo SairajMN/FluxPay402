@@ -347,6 +347,23 @@ app.get('/api/user/:address/refunds', (req, res) => {
   res.json(mockRefunds);
 });
 
+app.get('/api/user/:address/balance', (req, res) => {
+  const userAddress = req.params.address.toLowerCase();
+
+  // Mock balance for demo - in real app this would query Nexus
+  const mockBalance = {
+    totalAmount: '1.5', // 1.5 USDC
+    breakdown: {
+      ethereum: '0.8',
+      arbitrum: '0.4',
+      polygon: '0.3'
+    },
+    lastUpdated: Math.floor(Date.now() / 1000)
+  };
+
+  res.json(mockBalance);
+});
+
 // Demo endpoint for creating intents (what the frontend calls)
 app.post('/api/user/:address/create-intent', async (req, res) => {
   const userAddress = req.params.address;
