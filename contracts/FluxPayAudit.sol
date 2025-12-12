@@ -4,8 +4,8 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
- * @title FluxPayAudit
- * @dev Audit contract for recording payment intents, settlements, and refunds.
+ *FluxPayAudit
+ * Audit contract for recording payment intents, settlements, and refunds.
  * Does not hold funds; serves as tamper-evident record for Nexus settlements.
  */
 contract FluxPayAudit is AccessControl {
@@ -21,24 +21,11 @@ contract FluxPayAudit is AccessControl {
 
     mapping(bytes32 => Intent) public intents;
 
-    event IntentLocked(
-        bytes32 indexed intentId,
-        address indexed payer,
-        uint256 lockedAmount,
-        uint256 expiry
-    );
+    event IntentLocked(bytes32 indexed intentId,address indexed payer,uint256 lockedAmount,uint256 expiry);
 
-    event IntentSettled(
-        bytes32 indexed intentId,
-        address indexed provider,
-        uint256 usedAmount,
-        bytes nexusTx
-    );
+    event IntentSettled(bytes32 indexed intentId,address indexed provider,uint256 usedAmount,bytes nexusTx);
 
-    event IntentRefunded(
-        bytes32 indexed intentId,
-        bytes nexusTx
-    );
+    event IntentRefunded(bytes32 indexed intentId,bytes nexusTx);
 
     constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -50,62 +37,43 @@ contract FluxPayAudit is AccessControl {
     }
 
     /**
-     * @dev Records an intent creation, called after Nexus.createIntent success
-     * @param intentId Unique intent identifier
-     * @param payer Address locking funds
-     * @param lockedAmount Amount locked in smallest units
-     * @param expiry Timestamp when intent expires
+     * Records an intent creation, called after Nexus.createIntent success
+     *  intentId Unique intent identifier
+     *  payer Address locking funds
+     *  lockedAmount Amount locked in smallest units
+     *  expiry Timestamp when intent expires
      */
-    function recordIntent(
-        bytes32 intentId,
-        address payer,
-        uint256 lockedAmount,
-        uint256 expiry
-    ) external onlyGateway {
+    function recordIntent(bytes32 intentId,address payer,uint256 lockedAmount,uint256 expiry) external onlyGateway {
         require(intents[intentId].payer == address(0), "Intent already exists");
 
-        intents[intentId] = Intent({
-            payer: payer,
-            lockedAmount: lockedAmount,
-            expiry: expiry,
-            settled: false,
-            refunded: false
-        });
+        intents[intentId] = Intent({payer: payer,lockedAmount: lockedAmount,expiry: expiry,settled: false,refunded: false});
 
         emit IntentLocked(intentId, payer, lockedAmount, expiry);
     }
 
     /**
-     * @dev Records a settlement, called after Nexus.settle confirms
-     * @param intentId The settled intent
-     * @param provider Provider receiving payment
-     * @param usedAmount Actual amount transferred
-     * @param nexusTx Transaction hash/ID from Nexus
+     * Records a settlement, called after Nexus.settle confirms
+     *  intentId The settled intent
+     *  provider Provider receiving payment
+     *  usedAmount Actual amount transferred
+     *  nexusTx Transaction hash/ID from Nexus
      */
-    function recordSettlement (
-        bytes32 intentId,
-        address provider,
-        uint256 usedAmount,
-        bytes calldata nexusTx
-    ) public onlyGateway {
+    function recordSettlement (bytes32 intentId,address provider,uint256 usedAmount,bytes calldata nexusTx) public onlyGateway {
         require(!intents[intentId].settled, "Already settled");
         require(!intents[intentId].refunded, "Already refunded");
         require(usedAmount <= intents[intentId].lockedAmount, "Used more than locked");
-
+        
         intents[intentId].settled = true;
 
         emit IntentSettled(intentId, provider, usedAmount, nexusTx);
     }
 
     /**
-     * @dev Records a refund, called after Nexus.refund confirms
-     * @param intentId The refunded intent
-     * @param nexusTx Transaction hash/ID from Nexus
+     * Records a refund, called after Nexus.refund confirms
+     *  intentId The refunded intent
+     *  nexusTx Transaction hash/ID from Nexus
      */
-    function recordRefund(
-        bytes32 intentId,
-        bytes calldata nexusTx
-    ) external onlyGateway {
+    function recordRefund(bytes32 intentId,bytes calldata nexusTx) external onlyGateway {
         require(!intents[intentId].settled, "Cannot refund settled intent");
         require(!intents[intentId].refunded, "Already refunded");
 
@@ -115,14 +83,9 @@ contract FluxPayAudit is AccessControl {
     }
 
     /**
-     * @dev Batch record multiple events for gas efficiency
+     * Batch record multiple events for gas efficiency
      */
-    function batchRecordSettlements(
-        bytes32[] calldata intentIds,
-        address[] calldata providers,
-        uint256[] calldata usedAmounts,
-        bytes[] calldata nexusTxs
-    ) external onlyGateway {
+    function batchRecordSettlements(bytes32[] calldata intentIds,address[] calldata providers,uint256[] calldata usedAmounts,bytes[] calldata nexusTxs) external onlyGateway {
         require(
             intentIds.length == providers.length &&
             providers.length == usedAmounts.length &&
@@ -136,22 +99,16 @@ contract FluxPayAudit is AccessControl {
     }
 
     /**
-     * @dev Check if intent is expired
+     * Check if intent is expired
      */
     function isExpired(bytes32 intentId) external view returns (bool) {
         return block.timestamp > intents[intentId].expiry;
     }
 
     /**
-     * @dev Get intent details
+     * Get intent details
      */
-    function getIntent(bytes32 intentId) external view returns (
-        address payer,
-        uint256 lockedAmount,
-        uint256 expiry,
-        bool settled,
-        bool refunded
-    ) {
+    function getIntent(bytes32 intentId) external view returns (address payer,uint256 lockedAmount,uint256 expiry,bool settled,bool refunded) {
         Intent memory intent = intents[intentId];
         return (
             intent.payer,

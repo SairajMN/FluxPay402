@@ -4,8 +4,8 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title ProviderRegistry
- * @dev Registry for AI and API providers to register endpoints and pricing models.
+ *ProviderRegistry
+ *Registry for AI and API providers to register endpoints and pricing models.
  * Used by gateway to validate providers and route payments.
  */
 contract ProviderRegistry is Ownable {
@@ -54,16 +54,12 @@ contract ProviderRegistry is Ownable {
     }
 
     /**
-     * @dev Register a new provider
-     * @param name  name
-     * @param endpoint Base API endpoint
-     * @param publicKeyHash Hash of public key for receipt verification
+     *Register a new provider
+     * name  name
+     * endpoint Base API endpoint
+     * publicKeyHash Hash of public key for receipt verification
      */
-    function registerProvider(
-        string calldata name,
-        string calldata endpoint,
-        bytes32 publicKeyHash
-    ) external {
+    function registerProvider(string calldata name,string calldata endpoint,bytes32 publicKeyHash) external {
         require(providers[msg.sender].adminAddress == address(0), "Already registered");
 
         providers[msg.sender] = Provider({
@@ -81,13 +77,9 @@ contract ProviderRegistry is Ownable {
     }
 
     /**
-     * @dev Update provider details
+     *Update provider details
      */
-    function updateProvider(
-        string calldata name,
-        string calldata endpoint,
-        bytes32 publicKeyHash
-    ) external onlyProvider {
+    function updateProvider(string calldata name,string calldata endpoint,bytes32 publicKeyHash) external onlyProvider {
         Provider storage provider = providers[msg.sender];
         provider.name = name;
         provider.endpoint = endpoint;
@@ -97,7 +89,7 @@ contract ProviderRegistry is Ownable {
     }
 
     /**
-     * @dev Deactivate provider
+     *Deactivate provider
      */
     function deactivateProvider() external onlyProvider {
         providers[msg.sender].isActive = false;
@@ -105,14 +97,14 @@ contract ProviderRegistry is Ownable {
     }
 
     /**
-     * @dev Set pricing rule for an endpoint
-     * @param endpointHash Unique hash of endpoint + params
-     * @param minBudget Minimum budget in smallest units
-     * @param maxBudget Maximum budget (0 = unlimited)
-     * @param basePrice Base price per call
-     * @param pricePerToken For AI, price per token
-     * @param pricePerKb For data, price per KB
-     * @param slaTimeout SLA timeout in seconds
+     * Set pricing rule for an endpoint
+     * endpointHash Unique hash of endpoint + params
+     * minBudget Minimum budget in smallest units
+     * maxBudget Maximum budget (0 = unlimited)
+     * basePrice Base price per call
+     * pricePerToken For AI, price per token
+     * pricePerKb For data, price per KB
+     * slaTimeout SLA timeout in seconds
      */
     function setPricingRule(
         bytes32 endpointHash,
@@ -139,21 +131,17 @@ contract ProviderRegistry is Ownable {
     }
 
     /**
-     * @dev Get pricing for an endpoint
+     *Get pricing for an endpoint
      */
     function getPricing(bytes32 endpointHash) external view returns (PricingRule memory) {
         return pricingRules[endpointHash];
     }
 
     /**
-     * @dev Verify if provider signature is valid (helper for gateway)
+     *Verify if provider signature is valid (helper for gateway)
      * This would typically be done offchain, but providing onchain helper
      */
-    function isValidProviderSignature(
-        bytes32 intentId,
-        address provider,
-        bytes32 receiptHash,
-        bytes memory signature
+    function isValidProviderSignature(bytes32 intentId,address provider,bytes32 receiptHash,bytes memory signature
     ) external view returns (bool) {
         string memory prefix = "\x19Ethereum Signed Message:\n84";
         bytes32 messageHash = keccak256(abi.encodePacked(prefix, intentId, provider, receiptHash));
@@ -161,14 +149,14 @@ contract ProviderRegistry is Ownable {
         return recovered == provider && providers[provider].isActive;
     }
 
-    function getRecovered(bytes32 intentId, address provider, bytes32 receiptHash, bytes memory signature) external view returns (address) {
+    function getRecovered(bytes32 intentId, address provider, bytes32 receiptHash, bytes memory signature) external pure returns (address) {
         string memory prefix = "\x19Ethereum Signed Message:\n84";
         bytes32 messageHash = keccak256(abi.encodePacked(prefix, intentId, provider, receiptHash));
         return recoverSigner(messageHash, signature);
     }
 
     /**
-     * @dev Add authorized gateway (only owner)
+     *Add authorized gateway (only owner)
      */
     function authorizeGateway(address gateway) external onlyOwner {
         authorizedGateways[gateway] = true;
@@ -176,7 +164,7 @@ contract ProviderRegistry is Ownable {
     }
 
     /**
-     * @dev Revoke gateway authorization
+     *Revoke gateway authorization
      */
     function revokeGateway(address gateway) external onlyOwner {
         authorizedGateways[gateway] = false;
@@ -184,26 +172,23 @@ contract ProviderRegistry is Ownable {
     }
 
     /**
-     * @dev Get total registered providers
+     *Get total registered providers
      */
     function getProviderCount() external view returns (uint256) {
         return providerList.length;
     }
 
     /**
-     * @dev Check if provider is active
+     *Check if provider is active
      */
     function isProviderActive(address addr) external view returns (bool) {
         return providers[addr].isActive;
     }
 
     /**
-     * @dev Simple ECDSA recovery (for signature verification)
+     *Simple ECDSA recovery (for signature verification)
      */
-    function recoverSigner(bytes32 message, bytes memory sig) internal pure returns (address) {
-        bytes32 r;
-        bytes32 s;
-        uint8 v;
+    function recoverSigner(bytes32 message, bytes memory sig) internal pure returns (address) {bytes32 r;bytes32 s;uint8 v;
 
         require(sig.length == 65, "Invalid signature length");
 
