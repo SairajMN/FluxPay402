@@ -22,9 +22,7 @@
                 const message = args.join(' ');
                 // Suppress known wallet injection errors
                 if (
-                    message.includes('Failed to inject getOfflineSigner from keplr') ||
                     message.includes('injectedScript.bundle.js') ||
-                    message.includes('getOfflineSigner') && message.includes('keplr') ||
                     message.includes('intercept') ||
                     message.includes('404') && (
                         message.includes('feedback.js') ||
@@ -42,7 +40,6 @@
                 const message = args.join(' ');
                 // Suppress wallet-related warnings
                 if (
-                    message.includes('keplr') ||
                     message.includes('cosmos') ||
                     message.includes('wallet') && (message.includes('inject') || message.includes('intercept'))
                 ) {
@@ -53,7 +50,6 @@
 
             // Remove injected wallet objects immediately
             try {
-                if (window.keplr) delete window.keplr;
                 if (window.cosmjs) delete window.cosmjs;
                 if (window.getOfflineSigner) delete window.getOfflineSigner;
                 if (window.getOfflineSignerOnlyAmino) delete window.getOfflineSignerOnlyAmino;
