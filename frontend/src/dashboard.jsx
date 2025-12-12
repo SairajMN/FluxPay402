@@ -30,7 +30,7 @@ const Dashboard = () => {
       setNexusSdk(sdk);
     } catch (error) {
       console.error('Nexus init failed:', error);
-      // For MVP, continue without Nexus SDK - some features will be disabled
+      setNexusError('Failed to connect to Nexus testnet. Some features may be limited.');
       setNexusSdk(null);
     }
   };
@@ -80,7 +80,7 @@ const Dashboard = () => {
           setBalance(0);
         }
       } else {
-        // Nexus SDK not available, set demo balance
+        // Nexus SDK not available
         setBalance(0);
       }
 
@@ -101,7 +101,7 @@ const Dashboard = () => {
 
     } catch (error) {
       console.error('Failed to load user data:', error);
-      // Set empty arrays on error for demo
+      // Set empty arrays on error
       setIntents([]);
       setReceipts([]);
       setRefunds([]);
@@ -111,7 +111,7 @@ const Dashboard = () => {
   const createIntentExample = async () => {
     if (!account) return;
 
-    // Demo mode: Use the gateway endpoint for demo intents
+    // Create a regular intent for testing
     const intentId = `intent-${Date.now()}`;
     const amount = 50000; // 0.05 USDC in wei equivalent
 
@@ -197,7 +197,7 @@ const Dashboard = () => {
   const payForChat = async () => {
     if (!currentIntentId) return;
 
-    // In demo mode, create the intent and retry the request
+    // Create the intent and retry the request
     try {
       setLoading(true);
 
@@ -331,9 +331,9 @@ const Dashboard = () => {
           ) : (
             /* Connected wallet view */
             <div className="divide-y divide-gray-200">
-              {/* Demo AI Chat */}
+              {/* AI Chat */}
               <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">🚀 Demo AI Chat (HTTP 402 Payment Flow)</h2>
+                <h2 className="text-lg font-medium text-gray-900 mb-4">🚀 AI Chat (HTTP 402 Payment Flow)</h2>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                   <p className="text-sm text-blue-800 mb-2">
                     <strong>How it works:</strong> Try asking a question below. If it's your first time or costs exceed free tier,
@@ -428,7 +428,7 @@ const Dashboard = () => {
                   Refresh Data
                 </button>
                 <p className="text-sm text-gray-500 mt-2">
-                  This creates a regular intent without API usage. Use the chat above for the full payment flow demo.
+                  This creates a regular intent without API usage. Use the chat above for the full payment flow.
                 </p>
               </div>
 

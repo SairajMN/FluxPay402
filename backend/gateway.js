@@ -276,86 +276,76 @@ async function checkTimeouts() {
   }
 }
 
-// User data endpoints for dashboard (demo/mock data)
+// User data endpoints for dashboard (real user data)
 app.get('/api/user/:address/intents', (req, res) => {
-  const userAddress = req.params.address.toLowerCase();
+  try {
+    const userAddress = req.params.address.toLowerCase();
 
-  // Mock active intents for demo
-  const mockIntents = [
-    {
-      intentId: 'intent-demo-001',
-      status: 'LOCKED',
-      lockedAmount: 1000000, // 1 USDC in wei-equivalent
-      expiry: Math.floor(Date.now() / 1000) + 300, // 5 minutes from now
-      payer: userAddress
-    },
-    {
-      intentId: 'intent-demo-002',
-      status: 'SETTLED',
-      lockedAmount: 50000,
-      expiry: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 1 day from now
-      payer: userAddress
+    // Filter active intents for this user from memory
+    // In production, this would query a database or on-chain data
+    const userIntents = [];
+    for (const [intentId, intent] of activeIntents.entries()) {
+      if (intent.payer?.toLowerCase() === userAddress) {
+        userIntents.push({
+          intentId,
+          status: intent.status,
+          lockedAmount: intent.lockedAmount,
+          expiry: intent.expiry,
+          payer: intent.payer
+        });
+      }
     }
-  ];
 
-  res.json(mockIntents);
+    res.json(userIntents);
+  } catch (error) {
+    console.error('Error fetching user intents:', error);
+    res.status(500).json({ error: 'Failed to fetch user intents' });
+  }
 });
 
 app.get('/api/user/:address/receipts', (req, res) => {
-  const userAddress = req.params.address.toLowerCase();
+  try {
+    const userAddress = req.params.address.toLowerCase();
 
-  // Mock receipts for demo
-  const mockReceipts = [
-    {
-      intentId: 'intent-demo-001',
-      usedAmount: 50000, // 0.05 USDC
-      tokensUsed: 150,
-      provider: '0x742d35Cc7c6d21012B5991BcEFf26b5115Cf4C9f',
-      timestamp: Math.floor(Date.now() / 1000) - 3600, // 1 hour ago
-      model: 'openai/gpt-4o-mini',
-      completion: 'The user asked about integrating AI payments...'
-    },
-    {
-      intentId: 'intent-demo-002',
-      usedAmount: 80000, // 0.08 USDC
-      tokensUsed: 200,
-      provider: '0x742d35Cc7c6d21012B5991BcEFf26b5115Cf4C9f',
-      timestamp: Math.floor(Date.now() / 1000) - 1800, // 30 minutes ago
-      model: 'openai/gpt-4o',
-      completion: 'Here is the comprehensive guide for FluxPay integration...'
-    }
-  ];
+    // In MVP, receipts are tracked in-memory for successful transactions
+    // In production, this would query on-chain contract events or database
+    const userReceipts = [];
+    // For now, return empty array - receipts would be tracked elsewhere
+    // TODO: Implement proper receipt tracking tied to user address
 
-  res.json(mockReceipts);
+    res.json(userReceipts);
+  } catch (error) {
+    console.error('Error fetching user receipts:', error);
+    res.status(500).json({ error: 'Failed to fetch user receipts' });
+  }
 });
 
 app.get('/api/user/:address/refunds', (req, res) => {
-  const userAddress = req.params.address.toLowerCase();
+  try {
+    const userAddress = req.params.address.toLowerCase();
 
-  // Mock refunds for demo
-  const mockRefunds = [
-    {
-      intentId: 'intent-demo-timeout-001',
-      amount: 25000, // 0.025 USDC
-      reason: 'Service timeout',
-      nexusTx: '0x123456789abcdef123456789abcdef123456789abcdef',
-      timestamp: Math.floor(Date.now() / 1000) - (2 * 60 * 60) // 2 hours ago
-    }
-  ];
+    // In MVP, refunds are not tracked per user
+    // In production, this would query on-chain refund events
+    const userRefunds = [];
+    // TODO: Implement refund tracking tied to user address
 
-  res.json(mockRefunds);
+    res.json(userRefunds);
+  } catch (error) {
+    console.error('Error fetching user refunds:', error);
+    res.status(500).json({ error: 'Failed to fetch user refunds' });
+  }
 });
 
-// Demo endpoint for creating intents (what the frontend calls)
+// Real endpoint for creating intents (what the frontend calls)
 app.post('/api/user/:address/create-intent', async (req, res) => {
   const userAddress = req.params.address;
   const { intentId, amount } = req.body;
 
   try {
-    // In demo mode, just store locally and return success
+    // Store intent locally first
     const intentRecord = {
       intentId,
-      status: 'LOCKED',
+      status: 'PENDING',
       lockedAmount: amount,
       expiry: Math.floor(Date.now() / 1000) + (5 * 60), // 5 minutes
       payer: userAddress,
@@ -364,17 +354,32 @@ app.post('/api/user/:address/create-intent', async (req, res) => {
 
     activeIntents.set(intentId, intentRecord);
 
+    // Create real intent on testnet via Nexus
+    const nexusTx = await nexusAdapter.createIntent(
+      intentId,
+      userAddress,
+      'USDC',
+      amount,
+      intentRecord.expiry
+    );
+
+    // Update intent status
+    intentRecord.status = 'LOCKED';
+
     res.json({
       success: true,
-      transactionHash: 'mock_tx_' + Math.random().toString(36).substr(2, 9),
+      transactionHash: nexusTx,
       intent: intentRecord
     });
   } catch (error) {
+    console.error('Create intent error:', error);
+    // Remove intent on failure
+    activeIntents.delete(intentId);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Demo AI endpoint that requires payment
+// Real AI endpoint that requires payment
 app.post('/api/ai/chat', async (req, res) => {
   const paymentEvidence = req.headers['payment-evidence'];
 
@@ -415,7 +420,7 @@ app.post('/api/ai/chat', async (req, res) => {
   }
 
   try {
-    // Process payment and generate AI response
+    // Process payment and generate real AI response
     const evidence = JSON.parse(paymentEvidence);
     const { intentId } = evidence;
 
@@ -425,73 +430,56 @@ app.post('/api/ai/chat', async (req, res) => {
       return res.status(400).json({ error: 'Invalid intent' });
     }
 
-    // In demo mode, we'll simulate AI call and create a mock receipt
-    const mockReceipt = {
+    // Make real OpenRouter AI call
+    const aiParams = {
+      messages: [
+        {
+          role: 'user',
+          content: req.body.prompt || 'Hello, please provide a helpful response.'
+        }
+      ],
+      model: req.body.model || 'openai/gpt-4o-mini',
+      max_tokens: 1000,
+      temperature: req.body.temperature || 0.7
+    };
+
+    const aiResponse = await openRouterProxy.callCompletion(aiParams);
+
+    // Create real receipt based on actual OpenRouter usage
+    const usedTokens = aiResponse.usage.total_tokens || (aiResponse.usage.prompt_tokens + aiResponse.usage.completion_tokens);
+    const verifiedAmount = await openRouterProxy.verifyUsage(aiResponse.data, {
+      usedAmount: Math.round((usedTokens / 1000) * 15000), // Rough estimate: ~$0.015 per 1k tokens
+      model: aiResponse.data.model,
+      tokensUsed: usedTokens
+    });
+
+    const realReceipt = {
       intentId,
-      usedAmount: 7500, // 0.0075 USDC (~150 tokens at GPT-4o-mini rates)
-      tokensUsed: 150,
-      provider: '0x742d35Cc7c6d21012B5991BcEFf26b5115Cf4C9f',
+      usedAmount: verifiedAmount,
+      tokensUsed: usedTokens,
+      provider: '0x742d35Cc7c6d21012B5991BcEFf26b5115Cf4C9f', // Provider wallet
       nonce: crypto.randomUUID(),
       timestamp: Math.floor(Date.now() / 1000),
-      model: 'openai/gpt-4o-mini',
-      receiptHash: crypto.createHash('sha256').update(`${intentId}:${150}`).digest('hex')
+      model: aiResponse.data.model,
+      receiptHash: crypto.createHash('sha256').update(`${intentId}:${verifiedAmount}:${aiResponse.data.model}`).digest('hex')
     };
 
-    // Sign receipt (in real implementation, this would be done by provider)
+    // Sign receipt
     const sign = crypto.createSign('SHA256');
-    sign.update(`${mockReceipt.intentId}:${mockReceipt.usedAmount}:${mockReceipt.nonce}`);
-    mockReceipt.signature = sign.sign(GATEWAY_PRIVATE_KEY || 'demo_key', 'hex');
+    sign.update(`${realReceipt.intentId}:${realReceipt.usedAmount}:${realReceipt.nonce}`);
+    realReceipt.signature = sign.sign(GATEWAY_PRIVATE_KEY || 'demo_key', 'hex');
 
-    // Mock AI response
-    const mockResponse = {
-      completion: `Thank you for using FluxPay AI! Here's a comprehensive response to your question about ${req.body.prompt || 'AI integration'}:
-
-## Key Benefits of FluxPay x402
-
-1. **Trust-minimized payments** - No custody of funds
-2. **Microtransactions** - Pay exactly for what you use (down to token-level precision)
-3. **Cross-chain settlement** - Unified balances across multiple blockchains
-4. **Automatic refunds** - SLA-based guarantees with instant timeouts
-
-## Getting Started
-
-To integrate FluxPay into your dApp:
-
-\`\`\`javascript
-// 1. Create intent
-const intent = await nexusSDK.intent.create({
-  intentId: '${intentId}',
-  payerAddress: userWallet,
-  token: 'USDC',
-  amount: 50000, // 0.05 USDC
-  expiry: Date.now() + 300000
-});
-
-// 2. Use in API calls
-fetch('/api/ai/chat', {
-  headers: {
-    'Payment-Evidence': JSON.stringify({
-      intentId: '${intentId}',
-      nexusTx: intent.transactionHash
-    })
-  },
-  body: JSON.stringify({ prompt: "Your question here" })
-});
-\`\`\`
-
-This used approximately 150 tokens at GPT-4o-mini pricing. Your remaining balance has been refunded automatically.`,
-      usage: {
-        prompt_tokens: 45,
-        completion_tokens: 150,
-        total_tokens: 195
-      },
-      model: 'openai/gpt-4o-mini'
+    // Use real AI response
+    const realResponse = {
+      completion: aiResponse.data.choices[0].message.content,
+      usage: aiResponse.usage,
+      model: aiResponse.data.model
     };
 
-    // "Settle" the intent
+    // Process settlement
     const result = {
-      receipt: mockReceipt,
-      apiResult: mockResponse
+      receipt: realReceipt,
+      apiResult: realResponse
     };
 
     const settlementData = await handleSettlement(intentId, result, intentRecord);
@@ -502,7 +490,18 @@ This used approximately 150 tokens at GPT-4o-mini pricing. Your remaining balanc
     res.json(settlementData);
 
   } catch (error) {
-    console.error('Demo AI endpoint error:', error);
+    console.error('AI endpoint error:', error);
+
+    // Attempt refund on errors
+    try {
+      if (req.headers['payment-evidence']) {
+        const evidence = JSON.parse(req.headers['payment-evidence']);
+        await nexusAdapter.refundIntent(evidence.intentId);
+      }
+    } catch (refundError) {
+      console.error('AI endpoint refund failed:', refundError);
+    }
+
     res.status(500).json({ error: error.message });
   }
 });
@@ -513,7 +512,7 @@ setInterval(checkTimeouts, 30000);
 app.listen(PORT, () => {
   console.log(`FluxPay Gateway listening on port ${PORT}`);
   console.log(`Provider URL: ${PROVIDER_URL}`);
-  console.log(`Demo mode: Enabled - Mock endpoints available`);
+  console.log(`Testnet mode: Enabled - Real contracts and APIs`);
 });
 
 module.exports = app;
