@@ -3,8 +3,7 @@ const CACHE_NAME = 'fluxpay-cache-v1';
 const urls_to_cache = [
   './',
   './index.html',
-  './manifest.json',
-  './favicon.ico'
+  './manifest.json'
 ];
 
 // Install Event - Cache Static Assets
