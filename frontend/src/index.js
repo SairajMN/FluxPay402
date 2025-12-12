@@ -1,3 +1,8 @@
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import Dashboard from './dashboard.jsx';
+import './index.css';
+
 // Register service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -10,11 +15,6 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
-
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import Dashboard from './dashboard.jsx';
-import './index.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
