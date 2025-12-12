@@ -73,8 +73,7 @@
     "solidity-coverage": "^0.8.17",
     "supertest": "^6.3.3",
     "ts-node": "^10.9.2",
-    "typechain": "^8.3.2",
-    "typescript": "^5.9.3"
+    "typechain": "^8.3.2"
   },
   "peerDependencies": {
     "react": "^18.2.0",
