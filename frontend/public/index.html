@@ -10,6 +10,70 @@
     <meta name="description" content="FluxPay Nexus Frontend - Real-Time AI & API Micropayments" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>FluxPay x402</title>
+
+    <!-- Suppress wallet injection errors immediately -->
+    <script>
+        // Suppress console errors and warnings before any scripts run
+        (function () {
+            const origError = console.error;
+            const origWarn = console.warn;
+
+            console.error = function (...args) {
+                const message = args.join(' ');
+                // Suppress known wallet injection errors
+                if (
+                    message.includes('Failed to inject getOfflineSigner from keplr') ||
+                    message.includes('injectedScript.bundle.js') ||
+                    message.includes('getOfflineSigner') && message.includes('keplr') ||
+                    message.includes('intercept') ||
+                    message.includes('404') && (
+                        message.includes('feedback.js') ||
+                        message.includes('fluxpay402.vercel.app')
+                    ) ||
+                    message.includes('wallet') && (message.includes('inject') || message.includes('intercept')) ||
+                    message.includes('cosmos') && message.includes('wallet')
+                ) {
+                    return; // Suppress silently
+                }
+                origError.apply(console, args);
+            };
+
+            console.warn = function (...args) {
+                const message = args.join(' ');
+                // Suppress wallet-related warnings
+                if (
+                    message.includes('keplr') ||
+                    message.includes('cosmos') ||
+                    message.includes('wallet') && (message.includes('inject') || message.includes('intercept'))
+                ) {
+                    return; // Suppress silently
+                }
+                origWarn.apply(console, args);
+            };
+
+            // Remove injected wallet objects immediately
+            try {
+                if (window.keplr) delete window.keplr;
+                if (window.cosmjs) delete window.cosmjs;
+                if (window.getOfflineSigner) delete window.getOfflineSigner;
+                if (window.getOfflineSignerOnlyAmino) delete window.getOfflineSignerOnlyAmino;
+                if (window.getOfflineSignerAuto) delete window.getOfflineSignerAuto;
+            } catch (e) {
+                // Ignore any deletion errors
+            }
+
+            // Make touchstart event listeners passive to suppress warnings
+            const origAddEventListener = EventTarget.prototype.addEventListener;
+            EventTarget.prototype.addEventListener = function (type, listener, options) {
+                if (type === 'touchstart' && options !== true && (typeof options !== 'object' || options.passive !== false)) {
+                    // Make touchstart passive unless explicitly set to not passive
+                    const newOptions = typeof options === 'object' ? { ...options, passive: true } : { passive: true };
+                    return origAddEventListener.call(this, type, listener, newOptions);
+                }
+                return origAddEventListener.call(this, type, listener, options);
+            };
+        })();
+    </script>
 </head>
 
 <body>
