@@ -10,17 +10,9 @@
       "config": {
         "distDir": "build"
       }
-    },
-    {
-      "src": "api/gateway.js",
-      "use": "@vercel/node"
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/gateway.js"
-    },
     {
       "src": "/(.*)",
       "dest": "/frontend/$1"

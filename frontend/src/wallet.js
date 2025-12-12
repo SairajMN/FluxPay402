@@ -30,26 +30,39 @@ export function Web3Provider({ children }) {
           return;
         }
 
-        // Request account access for MetaMask
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const ethersProvider = new ethers.BrowserProvider(window.ethereum);
+        try {
+          // Request account access for MetaMask
+          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+          const ethersProvider = new ethers.BrowserProvider(window.ethereum);
 
-        setAccount(accounts[0]);
-        setProvider(ethersProvider);
+          setAccount(accounts[0]);
+          setProvider(ethersProvider);
 
-        // Listen for account changes
-        window.ethereum.on('accountsChanged', (accounts) => {
-          if (accounts.length > 0) {
-            setAccount(accounts[0]);
+          // Listen for account changes
+          window.ethereum.on('accountsChanged', (accounts) => {
+            if (accounts.length > 0) {
+              setAccount(accounts[0]);
+            } else {
+              setAccount(null);
+            }
+          });
+
+          // Listen for chain changes
+          window.ethereum.on('chainChanged', () => {
+            window.location.reload();
+          });
+        } catch (error) {
+          // Handle specific wallet errors
+          if (error.code === 4001) {
+            alert('Connection rejected by user. Please approve the connection in your wallet.');
+          } else if (error.code === -32002) {
+            alert('Connection request already pending. Please check your wallet.');
           } else {
-            setAccount(null);
+            console.error('MetaMask connection error:', error);
+            alert('Error connecting to MetaMask. Please make sure only one Ethereum wallet extension is enabled.');
           }
-        });
-
-        // Listen for chain changes
-        window.ethereum.on('chainChanged', () => {
-          window.location.reload();
-        });
+          return;
+        }
 
       } else if (walletType === 'phantom') {
         if (!isPhantomInstalled()) {
