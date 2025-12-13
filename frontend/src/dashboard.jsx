@@ -12,7 +12,20 @@ const Dashboard = () => {
   const [aiPrompt, setAiPrompt] = useState('Explain how FluxPay x402 micropayments work');
   const [balance, setBalance] = useState(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
+  const [selectedToken, setSelectedToken] = useState('USDC');
   const { isConnected, account } = useWeb3();
+
+  // Available tokens
+  const supportedTokens = [
+    { symbol: 'USDC', name: 'USD Coin', decimals: 6 },
+    { symbol: 'USDT', name: 'Tether', decimals: 6 },
+    { symbol: 'ETH', name: 'Ethereum', decimals: 18 },
+  ];
+
+  // Supported chains
+  const supportedChains = [
+    'ethereum', 'polygon', 'arbitrum', 'avalanche'
+  ];
 
   // Fetch balance when connected
   useEffect(() => {
@@ -24,14 +37,38 @@ const Dashboard = () => {
 
       setBalanceLoading(true);
       try {
-        const response = await fetch(`/api/user/${account}/balance`);
-        if (response.ok) {
-          const balanceData = await response.json();
-          setBalance(balanceData);
-        } else {
-          console.error('Failed to fetch balance:', response.status);
-          setBalance({ error: 'Failed to load balance' });
-        }
+        // Mock balance data for multiple tokens (in production, this would call Nexus API)
+        const mockBalances = {
+          USDC: {
+            totalAmount: '100.00',
+            breakdown: {
+              ethereum: '50.00',
+              polygon: '25.00',
+              arbitrum: '15.00',
+              avalanche: '10.00'
+            }
+          },
+          USDT: {
+            totalAmount: '75.00',
+            breakdown: {
+              ethereum: '40.00',
+              polygon: '20.00',
+              arbitrum: '10.00',
+              avalanche: '5.00'
+            }
+          },
+          ETH: {
+            totalAmount: '2.5000',
+            breakdown: {
+              ethereum: '1.5000',
+              polygon: '0.5000',
+              arbitrum: '0.3000',
+              avalanche: '0.2000'
+            }
+          }
+        };
+
+        setBalance(mockBalances[selectedToken]);
       } catch (error) {
         console.error('Error fetching balance:', error);
         setBalance({ error: 'Network error' });
@@ -41,7 +78,7 @@ const Dashboard = () => {
     };
 
     fetchBalance();
-  }, [isConnected, account]);
+  }, [isConnected, account, selectedToken]);
 
   // Test basic HTTP 402 payment flow
   const testPayment = async () => {
@@ -169,10 +206,40 @@ const Dashboard = () => {
             border: '2px solid #e9ecef',
             marginBottom: '2rem'
           }}>
-            <h2 style={{ color: '#333', marginTop: 0 }}>USDC Balance</h2>
-            <p style={{ color: '#666' }}>Your unified FluxPay balance across all chains</p>
+            {/* Token Selector */}
             <div style={{
-              fontSize: '2rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1rem'
+            }}>
+              <h2 style={{ color: '#333', marginTop: 0 }}>
+                {selectedToken} Balance
+              </h2>
+              <select
+                value={selectedToken}
+                onChange={(e) => setSelectedToken(e.target.value)}
+                style={{
+                  padding: '0.5rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  fontSize: '1rem'
+                }}
+              >
+                {supportedTokens.map(token => (
+                  <option key={token.symbol} value={token.symbol}>
+                    {token.symbol} - {token.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <p style={{ color: '#666' }}>
+              Your unified FluxPay balance across all {supportedChains.length} supported chains
+            </p>
+
+            <div style={{
+              fontSize: '3rem',
               fontWeight: 'bold',
               color: '#28a745',
               textAlign: 'center',
@@ -180,13 +247,67 @@ const Dashboard = () => {
             }}>
               {balanceLoading ? 'Loading...' :
                balance?.error ? balance.error :
-               balance?.totalAmount ? `${balance.totalAmount} USDC` : '0.00 USDC'}
+               balance?.totalAmount ? `${balance.totalAmount} ${selectedToken}` : `0.00 ${selectedToken}`}
             </div>
+
+            {/* Chain Breakdown */}
             {balance?.breakdown && !balanceLoading && !balance?.error && (
-              <div style={{ fontSize: '0.8rem', color: '#666', textAlign: 'center', marginTop: '-0.5rem' }}>
-                Ethereum: {balance.breakdown.ethereum} | Arbitrum: {balance.breakdown.arbitrum} | Polygon: {balance.breakdown.polygon}
+              <div style={{
+                textAlign: 'center',
+                fontSize: '0.9rem',
+                color: '#666',
+                marginTop: '-0.5rem'
+              }}>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                  gap: '1rem',
+                  marginTop: '1rem'
+                }}>
+                  {Object.entries(balance.breakdown).map(([chain, amount]) => (
+                    <div key={chain} style={{
+                      backgroundColor: '#f8f9fa',
+                      padding: '0.5rem',
+                      borderRadius: '4px',
+                      border: '1px solid #dee2e6'
+                    }}>
+                      <strong style={{ textTransform: 'capitalize' }}>{chain}:</strong> {amount} {selectedToken}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
+
+            {/* Supported Tokens Info */}
+            <div style={{
+              marginTop: '1.5rem',
+              padding: '1rem',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '4px',
+              fontSize: '0.85rem',
+              color: '#666'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>💰 Available Tokens:</span>
+                <div>
+                  {supportedTokens.map(token => (
+                    <span key={token.symbol} style={{
+                      marginLeft: '0.5rem',
+                      padding: '0.2rem 0.5rem',
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      borderRadius: '12px',
+                      fontSize: '0.75rem'
+                    }}>
+                      {token.symbol}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div style={{ marginTop: '0.5rem' }}>
+                🌐 Supported Chains: {supportedChains.join(', ').replace(/\b\w/g, l => l.toUpperCase())}
+              </div>
+            </div>
           </div>
         )}
 
@@ -353,7 +474,7 @@ const Dashboard = () => {
             <li><strong>HTTP 402 Flow:</strong> APIs return payment challenges instead of 401/403</li>
             <li><strong>Nexus Integration:</strong> Funds are locked in escrow before service execution</li>
             <li><strong>Micropayments:</strong> Pay only for what you use, down to individual API calls</li>
-            <li><strong>Multi-chain:</strong> Unified USDC balances across Ethereum, Arbitrum, Polygon</li>
+            <li><strong>Multi-chain:</strong> Unified {supportedTokens.length} token balances across {supportedChains.length} blockchains</li>
           </ul>
           {!isConnected && (
             <p style={{ color: '#856404', backgroundColor: '#fff3cd', padding: '0.5rem', borderRadius: '4px' }}>
