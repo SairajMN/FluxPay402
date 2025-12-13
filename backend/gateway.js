@@ -55,6 +55,25 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Balance API for real testnet balance fetching
+app.get('/api/user/:address/balance', async (req, res) => {
+  try {
+    const { address } = req.params;
+    const { token = 'USDC' } = req.query;
+
+    if (!address || !ethers.isAddress(address)) {
+      return res.status(400).json({ error: 'Invalid Ethereum address' });
+    }
+
+    const balances = await fetchRealBalances(address, token);
+    res.json(balances);
+
+  } catch (error) {
+    console.error('Balance fetch error:', error);
+    res.status(500).json({ error: 'Failed to fetch balances' });
+  }
+});
+
 // Main x402 gateway endpoint
 app.all('/api/*', async (req, res) => {
   const path = req.path;
@@ -294,25 +313,6 @@ async function handleGenericAPI(req, res, intentId) {
     endpoint: req.path
   });
 }
-
-// Balance API for real testnet balance fetching
-app.get('/api/user/:address/balance', async (req, res) => {
-  try {
-    const { address } = req.params;
-    const { token = 'USDC' } = req.query;
-
-    if (!address || !ethers.isAddress(address)) {
-      return res.status(400).json({ error: 'Invalid Ethereum address' });
-    }
-
-    const balances = await fetchRealBalances(address, token);
-    res.json(balances);
-
-  } catch (error) {
-    console.error('Balance fetch error:', error);
-    res.status(500).json({ error: 'Failed to fetch balances' });
-  }
-});
 
 // Function to fetch real testnet balances
 async function fetchRealBalances(address, selectedToken = 'USDC') {

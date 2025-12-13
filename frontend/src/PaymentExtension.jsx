@@ -757,13 +757,6 @@ const createIntent = async () => {
               <li>Test with our sandbox environment</li>
             </ol>
 
-            <h3>💰 Pricing</h3>
-            <ul>
-              <li><strong>Per Transaction:</strong> 0.1% fee per settlement</li>
-              <li><strong>Settlement:</strong> Cross-chain fees vary by network</li>
-              <li><strong>Free Tier:</strong> First 100 transactions free for testing</li>
-            </ul>
-
             <h3>🔐 Security</h3>
             <ul>
               <li>Funds secured in Nexus escrow (no custody)</li>
@@ -771,13 +764,6 @@ const createIntent = async () => {
               <li>Automatic SLA refunds on service failure</li>
               <li>Blockchain-verifiable settlement proofs</li>
             </ul>
-
-            <h3>📞 Support</h3>
-            <p>
-              Need help? Contact us at <a href="mailto:support@fluxpay402.com">support@fluxpay402.com</a>
-              or visit our <a href="https://docs.fluxpay402.com">documentation</a>.
-            </p>
-          </div>
         )}
 
         {/* Footer */}
