@@ -37,41 +37,20 @@ const Dashboard = () => {
 
       setBalanceLoading(true);
       try {
-        // Mock balance data for multiple tokens (in production, this would call Nexus API)
-        const mockBalances = {
-          USDC: {
-            totalAmount: '100.00',
-            breakdown: {
-              ethereum: '50.00',
-              polygon: '25.00',
-              arbitrum: '15.00',
-              avalanche: '10.00'
-            }
-          },
-          USDT: {
-            totalAmount: '75.00',
-            breakdown: {
-              ethereum: '40.00',
-              polygon: '20.00',
-              arbitrum: '10.00',
-              avalanche: '5.00'
-            }
-          },
-          ETH: {
-            totalAmount: '2.5000',
-            breakdown: {
-              ethereum: '1.5000',
-              polygon: '0.5000',
-              arbitrum: '0.3000',
-              avalanche: '0.2000'
-            }
-          }
-        };
+        // Call real API to fetch balance from multiple testnets
+        const response = await fetch(`/api/user/${account}/balance?token=${selectedToken}`);
 
-        setBalance(mockBalances[selectedToken]);
+        if (response.ok) {
+          const balanceData = await response.json();
+          setBalance(balanceData);
+        } else {
+          const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+          console.error('Balance fetch failed:', errorData);
+          setBalance({ error: errorData.error || 'Failed to fetch balances' });
+        }
       } catch (error) {
         console.error('Error fetching balance:', error);
-        setBalance({ error: 'Network error' });
+        setBalance({ error: 'Network error - check console for details' });
       } finally {
         setBalanceLoading(false);
       }
@@ -108,10 +87,10 @@ const Dashboard = () => {
     }
   };
 
-  // Test AI chat with payment
-  const testAIChat = async () => {
+  // Demo the complete HTTP 402 payment flow
+  const demoCompletePaymentFlow = async () => {
     if (!isConnected) {
-      alert('Please connect your wallet first to test AI payments');
+      alert('Please connect your wallet first to demo the payment flow');
       return;
     }
 
@@ -119,7 +98,9 @@ const Dashboard = () => {
     setAiResult(null);
 
     try {
-      const response = await fetch('/api/ai/chat', {
+      // Step 1: Initial request - will get HTTP 402 challenge
+      console.log('🔄 Step 1: Making initial AI request...');
+      const initialResponse = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -130,18 +111,100 @@ const Dashboard = () => {
         })
       });
 
-      if (response.status === 402) {
-        const challenge = await response.json();
+      if (initialResponse.status === 402) {
+        // Step 2: Parse payment challenge
+        const challenge = await initialResponse.json();
+        console.log('💰 Step 2: Received payment challenge:', challenge);
+
+        // Show challenge details to user
         setAiResult({
-          challenge: challenge,
-          message: 'Received payment challenge. In a real implementation, you would need to create an intent and provide payment evidence.'
+          step: 'challenge-received',
+          challenge,
+          message: `🎯 Payment Required! Max budget: ${challenge.maxBudget} USDC, Expires: ${
+            new Date(challenge.expiresAt * 1000).toLocaleTimeString()
+          }`,
+
+          // Show what would happen next in a real implementation
+          nextSteps: [
+            '1. Create Nexus intent with challenge parameters',
+            '2. Lock funds in escrow across chains',
+            '3. Retry request with Payment-Evidence header',
+            '4. Gateway validates intent & processes AI request',
+            '5. OpenRouter calculates tokens used & cost',
+            '6. Provider creates signed receipt',
+            '7. Gateway verifies receipt & settles payment',
+            '8. Automatic refund of unused funds'
+          ]
         });
-      } else {
-        const data = await response.json();
-        setAiResult(data);
+
+        return; // Stop here for demo - in real app, would proceed to payment
       }
+
+      // If no payment required (shouldn't happen in production)
+      const result = await initialResponse.json();
+      setAiResult({
+        step: 'completed',
+        result,
+        message: 'Request completed without payment (demo mode)'
+      });
+
     } catch (error) {
-      setAiResult({ error: error.message });
+      console.error('Payment flow demo error:', error);
+      setAiResult({
+        step: 'error',
+        error: error.message,
+        message: 'Payment flow demonstration failed'
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  // Advanced AI chat demo (requires payment simulation but shows the concept)
+  const testAIWithCostCalculation = async () => {
+    if (!isConnected) {
+      alert('Please connect your wallet to see AI cost calculation');
+      return;
+    }
+
+    setAiLoading(true);
+    setAiResult(null);
+
+    try {
+      // First, calculate estimated costs
+      const estimatedTokens = Math.ceil(aiPrompt.length / 4); // Rough token estimation
+      const estimatedCost = (estimatedTokens * 0.006) / 1000000; // USDC per token
+
+      console.log(`📊 Estimated tokens: ${estimatedTokens}, Cost: ${estimatedCost} USDC`);
+
+      // Show cost breakdown before attempting
+      setAiResult({
+        step: 'cost-estimation',
+        estimation: {
+          inputTokens: Math.ceil(estimatedTokens * 0.8),
+          outputTokens: Math.ceil(estimatedTokens * 0.2),
+          totalTokens: estimatedTokens,
+          estimatedCost: estimatedCost.toFixed(6),
+          model: 'openai/gpt-4o-mini'
+        },
+        message: `💰 Estimated cost: ${estimatedCost.toFixed(6)} USDC for ~${estimatedTokens} tokens. Click "Proceed with Payment" to continue.`,
+
+        // Show what OpenRouter would do
+        openRouterFlow: [
+          '• Validate payment intent with Nexus',
+          `• Call OpenRouter with prompt (${aiPrompt.length} chars)`,
+          `• Model: ${'openai/gpt-4o-mini'}`,
+          '• Stream response while counting tokens',
+          '• Calculate exact cost: prompt_tokens × $0.00015 + completion_tokens × $0.00060',
+          '• Return response + token metrics + cost'
+        ]
+      });
+
+    } catch (error) {
+      setAiResult({
+        step: 'error',
+        error: error.message
+      });
     } finally {
       setAiLoading(false);
     }
@@ -393,66 +456,137 @@ const Dashboard = () => {
                 }}
               />
 
-              <button
-                onClick={testAIChat}
-                disabled={aiLoading}
-                style={{
-                  backgroundColor: aiLoading ? '#ccc' : '#28a745',
-                  color: 'white',
-                  padding: '0.75rem 1.5rem',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                  cursor: aiLoading ? 'not-allowed' : 'pointer',
-                  width: '100%'
-                }}
-              >
-                {aiLoading ? 'Processing...' : 'Ask AI (Requires Payment)'}
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                <button
+                  onClick={demoCompletePaymentFlow}
+                  disabled={aiLoading}
+                  style={{
+                    backgroundColor: aiLoading ? '#ccc' : '#28a745',
+                    color: 'white',
+                    padding: '0.75rem 1rem',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '0.9rem',
+                    cursor: aiLoading ? 'not-allowed' : 'pointer',
+                    flex: 1
+                  }}
+                >
+                  {aiLoading ? 'Requesting...' : '🚀 Demo HTTP 402 Flow'}
+                </button>
+
+                <button
+                  onClick={testAIWithCostCalculation}
+                  disabled={aiLoading}
+                  style={{
+                    backgroundColor: aiLoading ? '#ccc' : '#007bff',
+                    color: 'white',
+                    padding: '0.75rem 1rem',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '0.9rem',
+                    cursor: aiLoading ? 'not-allowed' : 'pointer',
+                    flex: 1
+                  }}
+                >
+                  {aiLoading ? 'Calculating...' : '📊 Token Cost Calculator'}
+                </button>
+              </div>
 
               {aiResult && (
                 <div style={{
-                  backgroundColor: '#d4edda',
-                  border: '1px solid #c3e6cb',
+                  backgroundColor: aiResult.step === 'error' ? '#f8d7da' : aiResult.step === 'challenge-received' ? '#fff3cd' : '#d4edda',
+                  border: `1px solid ${aiResult.step === 'error' ? '#f5c6cb' : aiResult.step === 'challenge-received' ? '#ffeaa7' : '#c3e6cb'}`,
                   padding: '1rem',
                   borderRadius: '4px',
                   marginTop: '1rem'
                 }}>
-                  <h4 style={{ marginTop: 0, color: '#155724' }}>AI Response:</h4>
-                  {aiResult.error ? (
-                    <div style={{ color: '#721c24', backgroundColor: '#f8d7da', padding: '0.5rem', borderRadius: '4px' }}>
-                      Error: {aiResult.error}
-                    </div>
-                  ) : aiResult.challenge ? (
-                    <div>
-                      <p><strong>Payment Required!</strong></p>
-                      <p>{aiResult.message}</p>
-                      <details>
-                        <summary>Challenge Details</summary>
-                        <pre style={{
-                          backgroundColor: '#f8f9fa',
+                  <h4 style={{ marginTop: 0, color: aiResult.step === 'error' ? '#721c24' : aiResult.step === 'challenge-received' ? '#856404' : '#155724' }}>
+                    {aiResult.step === 'challenge-received' ? '🎯 Payment Challenge Received' :
+                     aiResult.step === 'cost-estimation' ? '📊 Cost Estimation' :
+                     aiResult.step === 'error' ? '❌ Error' : 'AI Response'}
+                  </h4>
+
+                  <p style={{ marginBottom: '1rem', fontWeight: 'bold' }}>{aiResult.message}</p>
+
+                  {/* Cost Estimation Display */}
+                  {aiResult.step === 'cost-estimation' && aiResult.estimation && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                        gap: '1rem',
+                        marginBottom: '1rem'
+                      }}>
+                        <div style={{ backgroundColor: '#f8f9fa', padding: '0.5rem', borderRadius: '4px' }}>
+                          <strong>Input Tokens:</strong> {aiResult.estimation.inputTokens}
+                        </div>
+                        <div style={{ backgroundColor: '#f8f9fa', padding: '0.5rem', borderRadius: '4px' }}>
+                          <strong>Output Tokens:</strong> {aiResult.estimation.outputTokens}
+                        </div>
+                        <div style={{ backgroundColor: '#f8f9fa', padding: '0.5rem', borderRadius: '4px' }}>
+                          <strong>Total Tokens:</strong> {aiResult.estimation.totalTokens}
+                        </div>
+                        <div style={{
+                          backgroundColor: '#28a745',
+                          color: 'white',
                           padding: '0.5rem',
                           borderRadius: '4px',
-                          overflow: 'auto',
-                          fontSize: '0.8rem',
-                          marginTop: '0.5rem'
+                          textAlign: 'center'
                         }}>
-                          {JSON.stringify(aiResult.challenge, null, 2)}
-                        </pre>
-                      </details>
+                          <strong>Cost:</strong> {aiResult.estimation.estimatedCost} USDC
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    <div>
+                  )}
+
+                  {/* OpenRouter Flow */}
+                  {aiResult.openRouterFlow && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <h5>How OpenRouter Calculates Cost:</h5>
+                      <ul style={{ margin: '0.5rem 0', paddingLeft: '1.5rem' }}>
+                        {aiResult.openRouterFlow.map((step, index) => (
+                          <li key={index} style={{ marginBottom: '0.25rem' }}>{step}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Full Workflow Steps */}
+                  {aiResult.nextSteps && aiResult.step === 'challenge-received' && (
+                    <div style={{ marginBottom: '1rem' }}>
+                      <h5>CompleteFluxPay Workflow:</h5>
+                      <ol style={{ margin: '0.5rem 0', paddingLeft: '1.5rem' }}>
+                        {aiResult.nextSteps.map((step, index) => (
+                          <li key={index} style={{ marginBottom: '0.25rem' }}>{step}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
+                  {/* Challenge Details */}
+                  {aiResult.challenge && (
+                    <details>
+                      <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                        💡 HTTP 402 Challenge Details
+                      </summary>
                       <pre style={{
                         backgroundColor: '#f8f9fa',
                         padding: '0.5rem',
                         borderRadius: '4px',
                         overflow: 'auto',
                         fontSize: '0.8rem',
+                        marginTop: '0.5rem',
                         whiteSpace: 'pre-wrap'
                       }}>
-                        {JSON.stringify(aiResult, null, 2)}
+                        {JSON.stringify(aiResult.challenge, null, 2)}
                       </pre>
+                    </details>
+                  )}
+
+                  {/* Error Handling */}
+                  {aiResult.error && (
+                    <div style={{ color: '#721c24', backgroundColor: '#f8d7da', padding: '0.5rem', borderRadius: '4px', marginTop: '0.5rem' }}>
+                      <strong>Details:</strong> {aiResult.error}
                     </div>
                   )}
                 </div>
