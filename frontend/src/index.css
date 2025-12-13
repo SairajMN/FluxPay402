@@ -11,3 +11,25 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Improved focus indicators for accessibility */
+button:focus,
+select:focus,
+input:focus {
+  outline: 3px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --high-contrast-bg: #ffffff;
+    --high-contrast-text: #000000;
+    --high-contrast-border: #000000;
+  }
+
+  body {
+    background-color: var(--high-contrast-bg);
+    color: var(--high-contrast-text);
+  }
+}

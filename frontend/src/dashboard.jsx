@@ -113,8 +113,9 @@ const Dashboard = () => {
 
       if (initialResponse.status === 402) {
         // Step 2: Parse payment challenge
-        const challenge = await initialResponse.json();
-        console.log('💰 Step 2: Received payment challenge:', challenge);
+        try {
+          const challenge = await initialResponse.json();
+          console.log('💰 Step 2: Received payment challenge:', challenge);
 
         // Show challenge details to user
         setAiResult({
@@ -138,6 +139,15 @@ const Dashboard = () => {
         });
 
         return; // Stop here for demo - in real app, would proceed to payment
+        } catch (jsonError) {
+          console.error('Failed to parse payment challenge:', jsonError);
+          setAiResult({
+            step: 'error',
+            error: `Invalid payment challenge response: ${initialResponse.status} ${initialResponse.statusText}`,
+            message: 'Received HTTP 402 but could not parse payment challenge JSON'
+          });
+          return;
+        }
       }
 
       // If no payment required (shouldn't happen in production)
@@ -211,11 +221,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      padding: '2rem',
-      fontFamily: 'Arial, sans-serif'
-    }}>
+    <main role="main" aria-labelledby="main-heading">
       <div style={{
         maxWidth: activeView === 'extension' ? '1400px' : '900px',
         margin: '0 auto',
@@ -234,10 +240,13 @@ const Dashboard = () => {
               alignItems: 'center',
               marginBottom: '2rem'
             }}>
-              <h1 style={{
-                color: '#333',
-                margin: 0
-              }}>
+              <h1
+                id="main-heading"
+                style={{
+                  color: '#333',
+                  margin: 0
+                }}
+              >
                 🎯 HTTP 402 Demo - Trust-minimized API Payments
               </h1>
               <button
@@ -269,33 +278,53 @@ const Dashboard = () => {
             border: '2px solid #e9ecef',
             marginBottom: '2rem'
           }}>
-            {/* Token Selector */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1rem'
-            }}>
+              {/* Token Selector */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1rem'
+              }}>
               <h2 style={{ color: '#333', marginTop: 0 }}>
                 {selectedToken} Balance
               </h2>
-              <select
-                value={selectedToken}
-                onChange={(e) => setSelectedToken(e.target.value)}
-                style={{
-                  padding: '0.5rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  fontSize: '1rem'
-                }}
-              >
-                {supportedTokens.map(token => (
-                  <option key={token.symbol} value={token.symbol}>
-                    {token.symbol} - {token.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div>
+                <label
+                  htmlFor="token-select"
+                  id="token-select-label"
+                  style={{
+                    display: 'block',
+                    marginBottom: '0.25rem',
+                    fontSize: '0.9rem',
+                    fontWeight: 'bold',
+                    color: '#333'
+                  }}
+                >
+                  Select Token
+                </label>
+                <select
+                  id="token-select"
+                  name="token-select"
+                  value={selectedToken}
+                  onChange={(e) => setSelectedToken(e.target.value)}
+                  aria-labelledby="token-select-label"
+                  style={{
+                    padding: '0.5rem',
+                    border: '2px solid #007bff',
+                    borderRadius: '4px',
+                    fontSize: '1rem',
+                    backgroundColor: '#ffffff',
+                    color: '#333'
+                  }}
+                >
+                  {supportedTokens.map(token => (
+                    <option key={token.symbol} value={token.symbol}>
+                      {token.symbol} - {token.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              </div>
 
             <p style={{ color: '#666' }}>
               Your unified FluxPay balance across all {supportedChains.length} supported chains
@@ -656,7 +685,7 @@ const Dashboard = () => {
           </>
         )}
       </div>
-    </div>
+      </main>
   );
 };
 
