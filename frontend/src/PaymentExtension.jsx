@@ -764,7 +764,8 @@ const createIntent = async () => {
               <li>Automatic SLA refunds on service failure</li>
               <li>Blockchain-verifiable settlement proofs</li>
             </ul>
-        )}
+          </div>
+)}
 
         {/* Footer */}
         <div style={{
@@ -773,12 +774,14 @@ const createIntent = async () => {
           color: '#666',
           fontSize: '0.9rem'
         }}>
-          <p>
-            🔒 Secure • ⚡ Fast • 🌐 Multi-Chain • 🤖 AI-Native
-          </p>
-          <p>
-            Built for the API economy • Trust-minimized payments for every request
-          </p>
+          <div>
+            <p>
+              🔒 Secure • ⚡ Fast • 🌐 Multi-Chain • 🤖 AI-Native
+            </p>
+            <p>
+              Built for the API economy • Trust-minimized payments for every request
+            </p>
+          </div>
         </div>
       </div>
     </div>
