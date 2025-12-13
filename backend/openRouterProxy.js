@@ -283,6 +283,25 @@ class OpenRouterProxy {
   }
 
   /**
+   * Calculate cost for given usage and model
+   * @param {Object} usage - Usage object from OpenRouter
+   * @param {string} model - Model name
+   * @returns {number} Cost in USDC
+   */
+  calculateCost(usage, model) {
+    const pricing = this.getModelPricing(model);
+    if (!pricing) {
+      console.warn(`Unknown model pricing for ${model}, using fallback`);
+      return 0.001; // Fallback cost
+    }
+
+    const promptCost = (usage.prompt_tokens || 0) * pricing.prompt_per_token / 1e6;
+    const completionCost = (usage.completion_tokens || 0) * pricing.completion_per_token / 1e6;
+
+    return promptCost + completionCost;
+  }
+
+  /**
    * Generate a deterministic hash for usage verification
    * @param {Object} usage - Usage object from OpenRouter
    * @param {string} model - Model name

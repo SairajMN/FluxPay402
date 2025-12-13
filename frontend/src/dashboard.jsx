@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { WalletConnect } from './WalletConnect.jsx';
 import { useWeb3 } from './wallet.js';
+import PaymentExtension from './PaymentExtension.jsx';
 
 const Dashboard = () => {
+  const [activeView, setActiveView] = useState('dashboard');
   const [paymentResult, setPaymentResult] = useState(null);
   const [aiResult, setAiResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -115,19 +117,45 @@ const Dashboard = () => {
       fontFamily: 'Arial, sans-serif'
     }}>
       <div style={{
-        maxWidth: '900px',
+        maxWidth: activeView === 'extension' ? '1400px' : '900px',
         margin: '0 auto',
-        backgroundColor: '#f9f9f9',
+        backgroundColor: activeView === 'extension' ? '#f8f9fa' : '#f9f9f9',
         padding: '2rem',
         borderRadius: '8px',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
       }}>
-        <h1 style={{
-          color: '#333',
-          marginBottom: '2rem'
-        }}>
-          FluxPay x402 - AI & API Micropayments
-        </h1>
+        {activeView === 'extension' ? (
+          <PaymentExtension />
+        ) : (
+          <>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '2rem'
+            }}>
+              <h1 style={{
+                color: '#333',
+                margin: 0
+              }}>
+                FluxPay x402 - AI & API Micropayments
+              </h1>
+              <button
+                onClick={() => setActiveView(activeView === 'dashboard' ? 'extension' : 'dashboard')}
+                style={{
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '4px',
+                  fontSize: '1rem',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                🎯 Payment Extension
+              </button>
+            </div>
 
         <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
           <WalletConnect />
@@ -333,6 +361,8 @@ const Dashboard = () => {
             </p>
           )}
         </div>
+          </>
+        )}
       </div>
     </div>
   );

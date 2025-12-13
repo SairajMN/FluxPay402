@@ -207,6 +207,23 @@ function createSignedReceipt(receiptData, privateKey) {
 }
 
 /**
+ * Sign receipt data (simplified version for gateway)
+ * @param {Object} receiptData - Receipt data to sign
+ * @param {string} privateKey - Gateway's private key
+ * @returns {string} Signature
+ */
+function signReceipt(receiptData, privateKey) {
+  try {
+    const signatureData = JSON.stringify(receiptData, Object.keys(receiptData).sort());
+    const wallet = new ethers.Wallet(privateKey);
+    return wallet.signMessage(signatureData);
+  } catch (error) {
+    console.error('Failed to sign receipt:', error);
+    throw error;
+  }
+}
+
+/**
  * Generate unique nonce
  * @returns {string} Unique nonce
  */
@@ -329,6 +346,7 @@ module.exports = {
   validateSignature,
   validateNonce,
   createSignedReceipt,
+  signReceipt,
   validateEndpointHash,
   verifyAgainstOpenRouterUsage,
   createReceiptsMerkleRoot,
