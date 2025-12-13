@@ -7,7 +7,7 @@ const { ReceiptVerifier } = require('./receiptVerifier.js');
 const { OpenRouterProxy } = require('./openRouterProxy.js');
 
 // Environment variables
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const GATEWAY_PRIVATE_KEY = process.env.GATEWAY_PRIVATE_KEY;
 

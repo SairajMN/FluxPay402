@@ -238,7 +238,7 @@ const Dashboard = () => {
                 color: '#333',
                 margin: 0
               }}>
-                FluxPay x402 - AI & API Micropayments
+                🎯 HTTP 402 Demo - Trust-minimized API Payments
               </h1>
               <button
                 onClick={() => setActiveView(activeView === 'dashboard' ? 'extension' : 'dashboard')}
@@ -374,104 +374,71 @@ const Dashboard = () => {
           </div>
         )}
 
-        <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: isConnected ? '1fr 1fr' : '1fr' }}>
+        <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: '1fr' }}>
 
-          {/* HTTP 402 Payment Test */}
-          <div style={{
-            backgroundColor: '#ffffff',
-            padding: '1.5rem',
-            borderRadius: '8px',
-            border: '2px solid #e9ecef'
-          }}>
-            <h2 style={{ color: '#333', marginTop: 0 }}>HTTP 402 Payment Test</h2>
-            <p style={{ color: '#666', marginBottom: '1rem' }}>
-              Test basic payment required response from the API.
-            </p>
-
-            <button
-              onClick={testPayment}
-              disabled={loading}
-              style={{
-                backgroundColor: loading ? '#ccc' : '#007bff',
-                color: 'white',
-                padding: '0.75rem 1.5rem',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                width: '100%'
-              }}
-            >
-              {loading ? 'Testing...' : 'Test HTTP 402 Payment'}
-            </button>
-
-            {paymentResult && (
-              <div style={{
-                backgroundColor: '#e7f3ff',
-                border: '1px solid #b3d4fc',
-                padding: '1rem',
-                borderRadius: '4px',
-                marginTop: '1rem'
-              }}>
-                <h4 style={{ marginTop: 0, color: '#0056b3' }}>Payment Challenge:</h4>
-                <pre style={{
-                  backgroundColor: '#f8f9fa',
-                  padding: '0.5rem',
-                  borderRadius: '4px',
-                  overflow: 'auto',
-                  fontSize: '0.8rem',
-                  whiteSpace: 'pre-wrap'
-                }}>
-                  {JSON.stringify(paymentResult, null, 2)}
-                </pre>
-              </div>
-            )}
-          </div>
-
-          {/* AI Chat with Payment (only show when wallet connected) */}
-          {isConnected && (
+          {/* Main HTTP 402 Demo Section - Full Width */}
+          {(isConnected) && (
             <div style={{
               backgroundColor: '#ffffff',
-              padding: '1.5rem',
+              padding: '2rem',
               borderRadius: '8px',
-              border: '2px solid #e9ecef'
+              border: '3px solid #007bff',
+              boxShadow: '0 4px 6px rgba(0,123,255,0.1)',
+              position: 'relative'
             }}>
-              <h2 style={{ color: '#333', marginTop: 0 }}>AI Chat with Micropayments</h2>
-              <p style={{ color: '#666', marginBottom: '1rem' }}>
-                Test AI integration with x402 payment flow.
+              <div style={{
+                position: 'absolute',
+                top: '-15px',
+                left: '20px',
+                backgroundColor: '#007bff',
+                color: 'white',
+                padding: '0.5rem 1rem',
+                borderRadius: '20px',
+                fontSize: '0.9rem',
+                fontWeight: 'bold'
+              }}>
+                ⭐ MAIN DEMO - HTTP 402 Flow
+              </div>
+
+              <h2 style={{ color: '#333', marginTop: 0 }}>🚀 AI Chat with HTTP 402 Micropayments</h2>
+              <p style={{ color: '#666', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
+                Experience the future of API payments: AI services that charge micropayments using HTTP 402 status codes and blockchain escrow. No upfront costs, pay only for what you use!
               </p>
 
               <textarea
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
-                placeholder="Enter your message for AI..."
+                placeholder="Ask me anything about FluxPay, HTTP 402, micropayments, blockchain, or AI..."
                 style={{
                   width: '100%',
-                  minHeight: '80px',
-                  padding: '0.5rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  marginBottom: '1rem',
-                  fontFamily: 'inherit'
+                  minHeight: '100px',
+                  padding: '1rem',
+                  border: '2px solid #e9ecef',
+                  borderRadius: '8px',
+                  marginBottom: '1.5rem',
+                  fontFamily: 'inherit',
+                  fontSize: '1rem',
+                  resize: 'vertical'
                 }}
               />
 
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
                 <button
                   onClick={demoCompletePaymentFlow}
                   disabled={aiLoading}
                   style={{
                     backgroundColor: aiLoading ? '#ccc' : '#28a745',
                     color: 'white',
-                    padding: '0.75rem 1rem',
+                    padding: '1rem 2rem',
                     border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '0.9rem',
+                    borderRadius: '8px',
+                    fontSize: '1.1rem',
                     cursor: aiLoading ? 'not-allowed' : 'pointer',
-                    flex: 1
+                    flex: 1,
+                    fontWeight: 'bold'
                   }}
                 >
-                  {aiLoading ? 'Requesting...' : '🚀 Demo HTTP 402 Flow'}
+                  {aiLoading ? '💭 Processing...' : '🎯 Trigger HTTP 402 Payment Challenge'}
                 </button>
 
                 <button
@@ -480,15 +447,16 @@ const Dashboard = () => {
                   style={{
                     backgroundColor: aiLoading ? '#ccc' : '#007bff',
                     color: 'white',
-                    padding: '0.75rem 1rem',
+                    padding: '1rem 2rem',
                     border: 'none',
-                    borderRadius: '4px',
-                    fontSize: '0.9rem',
+                    borderRadius: '8px',
+                    fontSize: '1.1rem',
                     cursor: aiLoading ? 'not-allowed' : 'pointer',
-                    flex: 1
+                    flex: 1,
+                    fontWeight: 'bold'
                   }}
                 >
-                  {aiLoading ? 'Calculating...' : '📊 Token Cost Calculator'}
+                  {aiLoading ? '📊 Calculating...' : '📊 Show Cost Estimation'}
                 </button>
               </div>
 
@@ -496,17 +464,23 @@ const Dashboard = () => {
                 <div style={{
                   backgroundColor: aiResult.step === 'error' ? '#f8d7da' : aiResult.step === 'challenge-received' ? '#fff3cd' : '#d4edda',
                   border: `1px solid ${aiResult.step === 'error' ? '#f5c6cb' : aiResult.step === 'challenge-received' ? '#ffeaa7' : '#c3e6cb'}`,
-                  padding: '1rem',
-                  borderRadius: '4px',
-                  marginTop: '1rem'
+                  padding: '1.5rem',
+                  borderRadius: '8px',
+                  marginTop: '2rem'
                 }}>
-                  <h4 style={{ marginTop: 0, color: aiResult.step === 'error' ? '#721c24' : aiResult.step === 'challenge-received' ? '#856404' : '#155724' }}>
-                    {aiResult.step === 'challenge-received' ? '🎯 Payment Challenge Received' :
-                     aiResult.step === 'cost-estimation' ? '📊 Cost Estimation' :
+                  <h4 style={{
+                    marginTop: 0,
+                    color: aiResult.step === 'error' ? '#721c24' : aiResult.step === 'challenge-received' ? '#856404' : '#155724',
+                    marginBottom: '1rem'
+                  }}>
+                    {aiResult.step === 'challenge-received' ? '🎯 HTTP 402 Payment Challenge Received!' :
+                     aiResult.step === 'cost-estimation' ? '📊 Token Cost Estimation' :
                      aiResult.step === 'error' ? '❌ Error' : 'AI Response'}
                   </h4>
 
-                  <p style={{ marginBottom: '1rem', fontWeight: 'bold' }}>{aiResult.message}</p>
+                  <div style={{ whiteSpace: 'pre-line', marginBottom: '1rem' }}>
+                    {aiResult.message}
+                  </div>
 
                   {/* Cost Estimation Display */}
                   {aiResult.step === 'cost-estimation' && aiResult.estimation && (
@@ -514,8 +488,7 @@ const Dashboard = () => {
                       <div style={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                        gap: '1rem',
-                        marginBottom: '1rem'
+                        gap: '1rem'
                       }}>
                         <div style={{ backgroundColor: '#f8f9fa', padding: '0.5rem', borderRadius: '4px' }}>
                           <strong>Input Tokens:</strong> {aiResult.estimation.inputTokens}
@@ -551,41 +524,53 @@ const Dashboard = () => {
                     </div>
                   )}
 
-                  {/* Full Workflow Steps */}
+                  {/* Workflow Steps */}
                   {aiResult.nextSteps && aiResult.step === 'challenge-received' && (
                     <div style={{ marginBottom: '1rem' }}>
-                      <h5>CompleteFluxPay Workflow:</h5>
-                      <ol style={{ margin: '0.5rem 0', paddingLeft: '1.5rem' }}>
-                        {aiResult.nextSteps.map((step, index) => (
-                          <li key={index} style={{ marginBottom: '0.25rem' }}>{step}</li>
-                        ))}
-                      </ol>
+                      <h5>🚀 Complete HTTP 402 Payment Flow:</h5>
+                      <div style={{
+                        backgroundColor: '#f8f9fa',
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        border: '1px solid #dee2e6'
+                      }}>
+                        <ol style={{ margin: '0', paddingLeft: '1.5rem' }}>
+                          {aiResult.nextSteps.map((step, index) => (
+                            <li key={index} style={{ marginBottom: '0.5rem', lineHeight: '1.4' }}>{step}</li>
+                          ))}
+                        </ol>
+                      </div>
                     </div>
                   )}
 
                   {/* Challenge Details */}
                   {aiResult.challenge && (
-                    <details>
-                      <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                        💡 HTTP 402 Challenge Details
+                    <details style={{ marginTop: '1rem' }}>
+                      <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>
+                        💡 View Full HTTP 402 Challenge JSON
                       </summary>
                       <pre style={{
                         backgroundColor: '#f8f9fa',
-                        padding: '0.5rem',
+                        padding: '1rem',
                         borderRadius: '4px',
                         overflow: 'auto',
                         fontSize: '0.8rem',
-                        marginTop: '0.5rem',
-                        whiteSpace: 'pre-wrap'
+                        marginTop: '0.5rem'
                       }}>
                         {JSON.stringify(aiResult.challenge, null, 2)}
                       </pre>
                     </details>
                   )}
 
-                  {/* Error Handling */}
+                  {/* Error Details */}
                   {aiResult.error && (
-                    <div style={{ color: '#721c24', backgroundColor: '#f8d7da', padding: '0.5rem', borderRadius: '4px', marginTop: '0.5rem' }}>
+                    <div style={{
+                      color: '#721c24',
+                      backgroundColor: '#f8d7da',
+                      padding: '0.5rem',
+                      borderRadius: '4px',
+                      marginTop: '0.5rem'
+                    }}>
                       <strong>Details:</strong> {aiResult.error}
                     </div>
                   )}
@@ -593,6 +578,58 @@ const Dashboard = () => {
               )}
             </div>
           )}
+
+          {/* Basic HTTP 402 Test */}
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '1.5rem',
+            borderRadius: '8px',
+            border: '2px solid #e9ecef'
+          }}>
+            <h3 style={{ color: '#333', marginTop: 0 }}>🧪 Basic HTTP 402 Test</h3>
+            <p style={{ color: '#666', marginBottom: '1rem' }}>
+              Test the simplest HTTP 402 response without AI processing.
+            </p>
+
+            <button
+              onClick={testPayment}
+              disabled={loading}
+              style={{
+                backgroundColor: loading ? '#ccc' : '#17a2b8',
+                color: 'white',
+                padding: '0.75rem 1.5rem',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '1rem',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                width: '100%'
+              }}
+            >
+              {loading ? 'Testing...' : 'Test Basic HTTP 402'}
+            </button>
+
+            {paymentResult && (
+              <div style={{
+                backgroundColor: '#e7f3ff',
+                border: '1px solid #b3d4fc',
+                padding: '1rem',
+                borderRadius: '4px',
+                marginTop: '1rem'
+              }}>
+                <h4 style={{ marginTop: 0, color: '#0056b3' }}>Challenge Response:</h4>
+                <pre style={{
+                  backgroundColor: '#f8f9fa',
+                  padding: '0.5rem',
+                  borderRadius: '4px',
+                  overflow: 'auto',
+                  fontSize: '0.8rem',
+                  whiteSpace: 'pre-wrap'
+                }}>
+                  {JSON.stringify(paymentResult, null, 2)}
+                </pre>
+              </div>
+            )}
+          </div>
 
         </div>
 

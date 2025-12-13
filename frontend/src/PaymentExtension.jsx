@@ -5,8 +5,11 @@ import React, { useState } from 'react';
  * Allows external platforms to integrate FluxPay's micropayment system
  */
 const PaymentExtension = () => {
-  const [activeTab, setActiveTab] = useState('checkout');
+  const [activeTab, setActiveTab] = useState('ai-demo');
   const [generatedCode, setGeneratedCode] = useState('');
+  const [aiPrompt, setAiPrompt] = useState('Explain how HTTP 402 micropayments work');
+  const [aiResponse, setAiResponse] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const [checkoutConfig, setCheckoutConfig] = useState({
     amount: 50,
     currency: 'USDC',
@@ -19,6 +22,73 @@ const PaymentExtension = () => {
   });
 
   const [apiKey, setApiKey] = useState('fp_test_' + Math.random().toString(36).substr(2, 9));
+
+  // Test AI with HTTP 402 micropayment flow
+  const testAIWithPayment = async () => {
+    setAiLoading(true);
+    setAiResponse(null);
+
+    try {
+      // Step 1: Make initial request - should get HTTP 402
+      console.log('🎯 Making AI request to trigger HTTP 402 payment challenge...');
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt: aiPrompt,
+          model: 'openai/gpt-4o-mini'
+        })
+      });
+
+      if (response.status === 402) {
+        // Step 2: Parse the payment challenge
+        const challenge = await response.json();
+        console.log('💰 Received HTTP 402 Payment Challenge:', challenge);
+
+        setAiResponse({
+          type: 'challenge',
+          challenge,
+          message: `🎯 **HTTP 402 Payment Required!** 
+
+Your AI request needs **${challenge.maxBudget} USDC** to proceed. This demonstrates the micropayment flow where APIs return payment challenges instead of service responses.
+
+**What happens next in a real implementation:**
+
+1. Nexus SDK creates intent with challenge parameters
+2. Funds locked in escrow across blockchains  
+3. Request retried with Payment-Evidence header
+4. Gateway validates payment & processes AI request
+5. Provider generates signed usage receipt
+6. Automatic settlement of exact token costs
+7. Unused funds refunded instantly
+
+**Try the complete demo in the main dashboard to see the full flow!**`
+        });
+
+        return; // Stop here for demo
+      }
+
+      // If no payment required (shouldn't happen in production)
+      const result = await response.json();
+      setAiResponse({
+        type: 'result',
+        result,
+        message: 'Request completed without payment (demo mode)'
+      });
+
+    } catch (error) {
+      console.error('AI demo error:', error);
+      setAiResponse({
+        type: 'error',
+        error: error.message,
+        message: '❌ Demo failed. Check console for details.'
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   // Generate checkout integration code
   const generateCheckoutCode = () => {
@@ -61,10 +131,18 @@ const PaymentExtension = () => {
     setGeneratedCode(code);
   };
 
-  // Generate API integration code
-  const generateAPICode = () => {
-    const code = `// Server-side FluxPay Integration
+  // Generate Generic API integration code
+  const generateGenericAPICode = () => {
+    const code = `// Generic API Integration with FluxPay x402 Micropayments
 const axios = require('axios');
+
+// Server-side configuration: specify the purpose of your API
+const API_CONFIG = {
+  purpose: 'database-query', // e.g., 'ai-chat', 'database-query', 'file-processing', 'compute-task'
+  baseUrl: 'https://your-api.com',
+  description: '${checkoutConfig.description}',
+  maxPaymentPerRequest: 0.05 // USDC
+};
 
 // 1. Initialize FluxPay client
 const fluxpay = {
@@ -72,54 +150,133 @@ const fluxpay = {
   baseUrl: 'https://api.fluxpay402.vercel.app'
 };
 
-// 2. Create payment intent
-async function createPaymentIntent(amount, currency, description) {
+// 2. Your API endpoint with payment middleware
+app.all('/api/your-endpoint', async (req, res) => {
   try {
-    const response = await axios.post(\`\${fluxpay.baseUrl}/api/payments/create\`, {
-      amount: amount * 1000000, // Convert to smallest units
-      currency: currency,
-      description: description,
-      api_endpoint: '${checkoutConfig.apiEndpoint}'
-    }, {
-      headers: {
-        'Authorization': \`Bearer \${fluxpay.apiKey}\`,
-        'Content-Type': 'application/json'
-      }
+    const paymentEvidence = req.headers['payment-evidence'];
+
+    if (!paymentEvidence) {
+      // Return HTTP 402 Payment Required with your API purpose
+      const intentId = require('crypto').randomBytes(16).toString('hex');
+      const priceEstimate = estimateCost(API_CONFIG.purpose, req.body);
+
+      const challenge = {
+        challengeType: 'x402',
+        intentId,
+        maxBudget: \`\${priceEstimate.max}00000\`, // USDC wei-equivalent
+        token: 'USDC',
+        expiresAt: Math.floor(Date.now() / 1000) + (5 * 60),
+        payWith: 'fluxpay:nexus-createIntent',
+        purpose: API_CONFIG.purpose,
+        description: API_CONFIG.description,
+        instructions: {
+          sdk: 'nexus.createIntent',
+          params: {
+            intentId,
+            payer: '<user_wallet>',
+            token: 'USDC',
+            amount: \`\${priceEstimate.max}00000\`,
+            expiry: Math.floor(Date.now() / 1000) + (5 * 60)
+          }
+        }
+      };
+
+      return res.status(402).json(challenge);
+    }
+
+    // Process payment evidence and your API logic
+    const evidence = JSON.parse(paymentEvidence);
+
+    // Verify payment (FluxPay handles this)
+    // Process your actual API logic
+    const result = await processYourAPI(req.body, API_CONFIG.purpose);
+
+    res.json({
+      success: true,
+      result,
+      purpose: API_CONFIG.purpose,
+      paymentVerified: true
     });
 
-    return response.data; // Returns { id, client_secret, amount, currency }
   } catch (error) {
-    console.error('Failed to create payment intent:', error);
+    console.error('API error:', error);
+    res.status(500).json({ error: 'Service processing failed' });
+  }
+});
+
+// 3. Client-side usage
+// Integration code for your frontend
+const clientIntegrationCode = \`
+async function callPaidAPI(endpoint, data) {
+  try {
+    // 1. Make initial request - will get HTTP 402
+    let response = await fetch('/api/\${endpoint}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (response.status === 402) {
+      const challenge = await response.json();
+
+      // 2. Use FluxPay SDK to handle payment
+      const paymentResult = await fluxpaySDK.processPayment({
+        challenge,
+        purpose: challenge.purpose // Server specifies the purpose
+      });
+
+      if (paymentResult.success) {
+        // 3. Retry with payment evidence
+        response = await fetch('/api/\${endpoint}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Payment-Evidence': JSON.stringify(paymentResult.evidence)
+          },
+          body: JSON.stringify(data)
+        });
+
+        return await response.json();
+      }
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Paid API call failed:', error);
     throw error;
   }
 }
 
-// 3. Handle payment completion
-async function confirmPayment(paymentIntentId, paymentEvidence) {
-  try {
-    const response = await axios.post(\`\${fluxpay.baseUrl}/api/payments/confirm\`, {
-      payment_intent_id: paymentIntentId,
-      payment_evidence: paymentEvidence
-    }, {
-      headers: {
-        'Authorization': \`Bearer \${fluxpay.apiKey}\`
-      }
-    });
+// Usage examples:
+const dbResult = await callPaidAPI('database/query', {
+  query: 'SELECT * FROM users WHERE active = true',
+  limit: 100
+});
 
-    return response.data; // Returns settlement details
-  } catch (error) {
-    console.error('Payment confirmation failed:', error);
-    throw error;
-  }
-}
+const computeResult = await callPaidAPI('compute/process', {
+  task: 'image-resize',
+  input: 'https://example.com/image.jpg',
+  width: 800,
+  height: 600
+});
 
-// Usage example:
-const paymentIntent = await createPaymentIntent(0.05, 'USDC', '${checkoutConfig.description}');
-console.log('Payment Intent:', paymentIntent);
+const aiResult = await callPaidAPI('ai/analyze', {
+  text: 'Analyze sentiment of this text...',
+  model: 'sentiment-analysis-v2'
+});
+\`;
 
-// After user completes payment, confirm it:
-const settlement = await confirmPayment(paymentIntent.id, paymentEvidence);
-console.log('Settlement:', settlement);`;
+function estimateCost(purpose, payload) {
+  const costMatrix = {
+    'ai-chat': { min: 0.001, max: 0.05 },
+    'database-query': { min: 0.0001, max: 0.01 },
+    'file-processing': { min: 0.005, max: 0.2 },
+    'compute-task': { min: 0.01, max: 1.0 },
+    'api-call': { min: 0.0001, max: 0.01 }
+  };
+
+  return costMatrix[purpose] || costMatrix['api-call'];
+}`;
 
     setGeneratedCode(code);
   };
@@ -183,8 +340,8 @@ const createIntent = async () => {
   };
 
   const tabs = [
-    { id: 'checkout', name: 'Checkout Widget', icon: '🎨' },
-    { id: 'api', name: 'API Integration', icon: '🔌' },
+    { id: 'ai-demo', name: 'AI Demo', icon: '🤖' },
+    { id: 'api', name: 'Generic API', icon: '🔌' },
     { id: 'sdk', name: 'SDK Usage', icon: '📦' },
     { id: 'docs', name: 'Documentation', icon: '📚' }
   ];
@@ -214,7 +371,7 @@ const createIntent = async () => {
           fontSize: '1.2rem',
           marginBottom: '3rem'
         }}>
-          Easy-to-integrate micropayment solution for your platform (like Razorpay for AI & APIs)
+          Easy-to-integrate micropayment solution for your platform (like Razorpay for any API)
         </p>
 
         {/* API Key Display */}
@@ -283,8 +440,118 @@ const createIntent = async () => {
           ))}
         </div>
 
+        {/* AI Demo Panel */}
+        {activeTab === 'ai-demo' && (
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '1.5rem',
+            borderRadius: '8px',
+            border: '2px solid #e9ecef',
+            marginBottom: '2rem'
+          }}>
+            <h3>🤖 Real AI with HTTP 402 Micropayments</h3>
+            <p style={{ color: '#666', marginBottom: '1rem' }}>
+              Test how FluxPay enables real AI services with micropayments. APIs return HTTP 402 Payment Required instead of 401/403.
+            </p>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                Your AI Prompt
+              </label>
+              <textarea
+                value={aiPrompt}
+                onChange={(e) => setAiPrompt(e.target.value)}
+                placeholder="Ask anything about FluxPay, HTTP 402, or blockchain payments..."
+                style={{
+                  width: '100%',
+                  minHeight: '100px',
+                  padding: '0.75rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px',
+                  fontSize: '1rem',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+
+            <button
+              onClick={testAIWithPayment}
+              disabled={aiLoading}
+              style={{
+                marginTop: '1rem',
+                backgroundColor: aiLoading ? '#ccc' : '#28a745',
+                color: 'white',
+                padding: '0.75rem 1.5rem',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '1rem',
+                cursor: aiLoading ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {aiLoading ? '💭 Processing AI Request...' : '🚀 Test AI with HTTP 402 Payment'}
+            </button>
+          </div>
+        )}
+
+        {/* AI Response Display */}
+        {aiResponse && activeTab === 'ai-demo' && (
+          <div style={{
+            backgroundColor: aiResponse.type === 'error' ? '#f8d7da' : '#d4edda',
+            border: `1px solid ${aiResponse.type === 'error' ? '#f5c6cb' : '#c3e6cb'}`,
+            padding: '1.5rem',
+            borderRadius: '8px',
+            marginBottom: '2rem'
+          }}>
+            <h4 style={{
+              marginTop: 0,
+              color: aiResponse.type === 'error' ? '#721c24' : '#155724',
+              marginBottom: '1rem'
+            }}>
+              {aiResponse.type === 'challenge' ? '🎯 Payment Challenge Received' :
+               aiResponse.type === 'error' ? '❌ Error' : 'AI Response'}
+            </h4>
+
+            <div style={{ whiteSpace: 'pre-line' }}>
+              {aiResponse.message}
+            </div>
+
+            {/* Challenge Details */}
+            {aiResponse.challenge && (
+              <details style={{ marginTop: '1rem' }}>
+                <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>
+                  💡 HTTP 402 Challenge Details
+                </summary>
+                <pre style={{
+                  backgroundColor: '#f8f9fa',
+                  padding: '1rem',
+                  borderRadius: '4px',
+                  overflow: 'auto',
+                  fontSize: '0.8rem',
+                  marginTop: '0.5rem',
+                  whiteSpace: 'pre-wrap'
+                }}>
+                  {JSON.stringify(aiResponse.challenge, null, 2)}
+                </pre>
+              </details>
+            )}
+
+            {/* Error Handling */}
+            {aiResponse.error && (
+              <div style={{
+                color: '#721c24',
+                backgroundColor: '#f8d7da',
+                padding: '0.5rem',
+                borderRadius: '4px',
+                marginTop: '0.5rem'
+              }}>
+                <strong>Details:</strong> {aiResponse.error}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Configuration Panel */}
-        {activeTab !== 'docs' && (
+        {activeTab !== 'docs' && activeTab !== 'ai-demo' && (
           <div style={{
             backgroundColor: '#ffffff',
             padding: '1.5rem',
@@ -391,7 +658,7 @@ const createIntent = async () => {
             <button
               onClick={
                 activeTab === 'checkout' ? generateCheckoutCode :
-                activeTab === 'api' ? generateAPICode : generateSDKCode
+                activeTab === 'api' ? generateGenericAPICode : generateSDKCode
               }
               style={{
                 marginTop: '1rem',
