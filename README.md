@@ -1,4 +1,4 @@
-# FluxPay Nexus
+# Fluxpay x402
 
 **Real-Time AI & API Micropayments using HTTP 402, Avail Nexus, and OpenRouter**
 
@@ -6,9 +6,9 @@
 [![Node.js](https://img.shields.io/badge/Node.js-16+-green.svg)](https://nodejs.org/)
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.20-blue.svg)](https://soliditylang.org/)
 
-## 🚀 What is FluxPay Nexus?
+## 🚀 What is Fluxpay x402?
 
-FluxPay Nexus enables trust-minimized, real-time micropayments for AI and API services using the HTTP 402 Payment Required protocol. Built on Avail Nexus unified balances with OpenRouter AI metering, it provides automatic cross-chain settlement and SLA-based refunds.
+Fluxpay x402 enables trust-minimized, real-time micropayments for AI and API services using the HTTP 402 Payment Required protocol. Built on Avail Nexus unified balances with OpenRouter AI metering, it provides automatic cross-chain settlement and SLA-based refunds.
 
 ### Key Features
 - ✅ **HTTP 402 Protocol**: Payment challenge-response flow for any API
