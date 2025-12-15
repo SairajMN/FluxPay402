@@ -13,6 +13,7 @@ const Dashboard = () => {
   const [balance, setBalance] = useState(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
   const [selectedToken, setSelectedToken] = useState('USDC');
+  const [testMode, setTestMode] = useState(false);
   const { isConnected, account } = useWeb3();
 
   // Available tokens
@@ -27,15 +28,59 @@ const Dashboard = () => {
     'ethereum', 'polygon', 'arbitrum', 'avalanche'
   ];
 
-  // Fetch balance when connected
+  // Fetch balance when connected (or in test mode)
   useEffect(() => {
     const fetchBalance = async () => {
-      if (!isConnected || !account) {
+      if (!isConnected && !testMode) {
         setBalance(null);
         return;
       }
 
       setBalanceLoading(true);
+
+      // Use mock data in test mode
+      if (testMode) {
+        const mockBalances = {
+          USDC: {
+            totalAmount: '5.24',
+            breakdown: {
+              ethereum: '1.13',
+              polygon: '2.58',
+              arbitrum: '1.26',
+              avalanche: '0.27'
+            }
+          },
+          USDT: {
+            totalAmount: '3.67',
+            breakdown: {
+              ethereum: '1.45',
+              polygon: '1.02',
+              arbitrum: '0.87',
+              avalanche: '0.33'
+            }
+          },
+          ETH: {
+            totalAmount: '0.0348',
+            breakdown: {
+              ethereum: '0.0124',
+              polygon: '0.0091',
+              arbitrum: '0.0089',
+              avalanche: '0.0044'
+            }
+          }
+        };
+
+        const mockBalance = mockBalances[selectedToken] || mockBalances['USDC'];
+        setBalance({
+          ...mockBalance,
+          token: selectedToken,
+          address: testMode ? '0x742d35Cc6795C2c3A850473e17b10F75d08Cf10E8' : account,
+          lastUpdated: new Date().toISOString()
+        });
+        setBalanceLoading(false);
+        return;
+      }
+
       try {
         // Call real API to fetch balance from multiple testnets
         const response = await fetch(`/api/user/${account}/balance?token=${selectedToken}`);
@@ -57,7 +102,7 @@ const Dashboard = () => {
     };
 
     fetchBalance();
-  }, [isConnected, account, selectedToken]);
+  }, [isConnected, account, selectedToken, testMode]);
 
   // Test basic HTTP 402 payment flow
   const testPayment = async () => {
@@ -89,8 +134,8 @@ const Dashboard = () => {
 
   // Demo the complete HTTP 402 payment flow
   const demoCompletePaymentFlow = async () => {
-    if (!isConnected) {
-      alert('Please connect your wallet first to demo the payment flow');
+    if (!isConnected && !testMode) {
+      alert('Please connect your wallet first to demo the payment flow (or enable test mode)');
       return;
     }
 
@@ -98,6 +143,51 @@ const Dashboard = () => {
     setAiResult(null);
 
     try {
+      // Use mock data in test mode
+      if (testMode) {
+        setTimeout(() => {
+          const mockChallenge = {
+            challengeType: 'x402',
+            intentId: `fluxpay:test-${Math.random().toString(36).substr(2, 9)}`,
+            maxBudget: '0.05',
+            token: 'USDC',
+            expiresAt: Math.floor(Date.now() / 1000) + (5 * 60),
+            instructions: {
+              sdk: 'avail-nexus',
+              method: 'intent.create',
+              params: {
+                intentId: `fluxpay:test-${Math.random().toString(36).substr(2, 9)}`,
+                token: 'USDC',
+                amount: '0.05',
+                expiry: Math.floor(Date.now() / 1000) + (5 * 60)
+              }
+            }
+          };
+
+          setAiResult({
+            step: 'challenge-received',
+            challenge: mockChallenge,
+            message: `🎯 Payment Required! Max budget: ${mockChallenge.maxBudget} USDC, Expires: ${
+              new Date(mockChallenge.expiresAt * 1000).toLocaleTimeString()
+            }\n\n**TEST MODE ENABLED**: This simulates a real HTTP 402 response!`,
+
+            // Show what would happen next in a real implementation
+            nextSteps: [
+              '1. 🧪 [TEST MODE] Nexus SDK would create intent with challenge parameters',
+              '2. 🧪 [TEST MODE] Funds would be locked in escrow across chains',
+              '3. 🧪 [TEST MODE] Request would be retried with Payment-Evidence header',
+              '4. 🧪 [TEST MODE] Gateway would validate intent & process AI request',
+              '5. 🧪 [TEST MODE] OpenRouter would calculate tokens used & cost',
+              '6. 🧪 [TEST MODE] Provider would create signed receipt',
+              '7. 🧪 [TEST MODE] Gateway would verify receipt & settle payment',
+              '8. 🧪 [TEST MODE] Automatic refund of unused funds'
+            ]
+          });
+          setAiLoading(false);
+        }, 1500); // Simulate network delay
+        return;
+      }
+
       // Step 1: Initial request - will get HTTP 402 challenge
       console.log('🔄 Step 1: Making initial AI request...');
       const initialResponse = await fetch('/api/ai/chat', {
@@ -166,19 +256,53 @@ const Dashboard = () => {
         message: 'Payment flow demonstration failed'
       });
     } finally {
-      setAiLoading(false);
+      if (!testMode) {
+        setAiLoading(false);
+      }
     }
   };
 
   // Advanced AI chat demo (requires payment simulation but shows the concept)
   const testAIWithCostCalculation = async () => {
-    if (!isConnected) {
-      alert('Please connect your wallet to see AI cost calculation');
+    if (!isConnected && !testMode) {
+      alert('Please connect your wallet to see AI cost calculation (or enable test mode)');
       return;
     }
 
     setAiLoading(true);
     setAiResult(null);
+
+    // Use mock cost calculation in test mode
+    if (testMode) {
+      setTimeout(() => {
+        const estimatedTokens = Math.ceil(aiPrompt.length / 4); // Rough token estimation
+        const estimatedCost = (estimatedTokens * 0.006) / 1000000; // USDC per token
+
+        setAiResult({
+          step: 'cost-estimation',
+          estimation: {
+            inputTokens: Math.ceil(estimatedTokens * 0.8),
+            outputTokens: Math.ceil(estimatedTokens * 0.2),
+            totalTokens: estimatedTokens,
+            estimatedCost: estimatedCost.toFixed(6),
+            model: 'openai/gpt-4o-mini'
+          },
+          message: `💰 [TEST MODE] Estimated cost: ${estimatedCost.toFixed(6)} USDC for ~${estimatedTokens} tokens. In real mode, this would show exact pricing from OpenRouter.`,
+
+          // Show what OpenRouter would do
+          openRouterFlow: [
+            '🧪 [TEST MODE] Would validate payment intent with Nexus',
+            `🧪 [TEST MODE] Would call OpenRouter with prompt (${aiPrompt.length} chars)`,
+            `🧪 [TEST MODE] Model: ${'openai/gpt-4o-mini'}`,
+            '🧪 [TEST MODE] Would stream response while counting tokens',
+            '🧪 [TEST MODE] Would calculate exact cost: prompt_tokens × $0.00015 + completion_tokens × $0.00060',
+            '🧪 [TEST MODE] Would return response + token metrics + cost'
+          ]
+        });
+        setAiLoading(false);
+      }, 1000);
+      return;
+    }
 
     try {
       // First, calculate estimated costs
@@ -231,7 +355,7 @@ const Dashboard = () => {
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
       }}>
         {activeView === 'extension' ? (
-          <PaymentExtension />
+          <PaymentExtension testMode={testMode} />
         ) : (
           <>
             <div style={{
@@ -248,29 +372,60 @@ const Dashboard = () => {
                 }}
               >
                 🎯 HTTP 402 Demo - Trust-minimized API Payments
+                {testMode && <span style={{ fontSize: '0.7em', color: '#007bff' }}> (TEST MODE)</span>}
               </h1>
-              <button
-                onClick={() => setActiveView(activeView === 'dashboard' ? 'extension' : 'dashboard')}
-                style={{
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  padding: '0.75rem 1.5rem',
-                  border: 'none',
-                  borderRadius: '4px',
-                  fontSize: '1rem',
-                  cursor: 'pointer',
-                  fontWeight: 'bold'
-                }}
-              >
-                🎯 Payment Extension
-              </button>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <button
+                  onClick={() => setTestMode(!testMode)}
+                  style={{
+                    backgroundColor: testMode ? '#28a745' : '#ffc107',
+                    color: 'white',
+                    padding: '0.75rem 1.5rem',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '1rem',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {testMode ? '🧪 TEST MODE ON' : '🚀 TEST MODE OFF'}
+                </button>
+                <button
+                  onClick={() => setActiveView(activeView === 'dashboard' ? 'extension' : 'dashboard')}
+                  style={{
+                    backgroundColor: '#007bff',
+                    color: 'white',
+                    padding: '0.75rem 1.5rem',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '1rem',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  🎯 Payment Extension
+                </button>
+              </div>
             </div>
 
         <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-          <WalletConnect />
+          {testMode ? (
+            <div style={{
+              backgroundColor: '#28a745',
+              color: 'white',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              display: 'inline-block',
+              marginRight: '10px'
+            }}>
+              Mock Connected: 0x742d35Cc6795C2c3A850473e17b10F75d08Cf10E8
+            </div>
+          ) : (
+            <WalletConnect />
+          )}
         </div>
 
-        {isConnected && (
+        {(isConnected || testMode) && (
           <div style={{
             backgroundColor: '#ffffff',
             padding: '1.5rem',
@@ -406,7 +561,7 @@ const Dashboard = () => {
         <div style={{ display: 'grid', gap: '2rem', gridTemplateColumns: '1fr' }}>
 
           {/* Main HTTP 402 Demo Section - Full Width */}
-          {(isConnected) && (
+          {(isConnected || testMode) && (
             <div style={{
               backgroundColor: '#ffffff',
               padding: '2rem',

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
  * FluxPay Payment Extension - Razorpay-like Integration Dashboard
  * Allows external platforms to integrate FluxPay's micropayment system
  */
-const PaymentExtension = () => {
+const PaymentExtension = ({ testMode = false }) => {
   const [activeTab, setActiveTab] = useState('ai-demo');
   const [generatedCode, setGeneratedCode] = useState('');
   const [aiPrompt, setAiPrompt] = useState('Explain how HTTP 402 micropayments work');
@@ -29,6 +29,52 @@ const PaymentExtension = () => {
     setAiResponse(null);
 
     try {
+      if (testMode) {
+        // Mock response for test mode
+        setTimeout(() => {
+          const mockChallenge = {
+            challengeType: 'x402',
+            intentId: `fluxpay:test-${Math.random().toString(36).substr(2, 9)}`,
+            maxBudget: '0.05',
+            token: 'USDC',
+            expiresAt: Math.floor(Date.now() / 1000) + (5 * 60),
+            instructions: {
+              sdk: 'avail-nexus',
+              method: 'intent.create',
+              params: {
+                intentId: `fluxpay:test-${Math.random().toString(36).substr(2, 9)}`,
+                token: 'USDC',
+                amount: '0.05',
+                expiry: Math.floor(Date.now() / 1000) + (5 * 60)
+              }
+            }
+          };
+
+          setAiResponse({
+            type: 'challenge',
+            challenge: mockChallenge,
+            message: `🎯 **HTTP 402 Payment Required!** 
+
+Your AI request needs **${mockChallenge.maxBudget} USDC** to proceed. **TEST MODE ENABLED**: This demonstrates the micropayment flow without real API calls.
+
+**What happens next in a real implementation:**
+
+1. Nexus SDK creates intent with challenge parameters
+2. Funds locked in escrow across blockchains  
+3. Request retried with Payment-Evidence header
+4. Gateway validates payment & processes AI request
+5. OpenRouter calculates tokens used & cost
+6. Provider creates signed receipt
+7. Automatic settlement of exact costs
+8. Unused funds refunded instantly
+
+**Switch back to production mode in main dashboard for live API calls!**`
+          });
+          setAiLoading(false);
+        }, 1000); // Simulate network delay
+        return;
+      }
+
       // Step 1: Make initial request - should get HTTP 402
       console.log('🎯 Making AI request to trigger HTTP 402 payment challenge...');
       const response = await fetch('/api/ai/chat', {
@@ -50,14 +96,14 @@ const PaymentExtension = () => {
         setAiResponse({
           type: 'challenge',
           challenge,
-          message: `🎯 **HTTP 402 Payment Required!** 
+          message: `🎯 **HTTP 402 Payment Required!**
 
 Your AI request needs **${challenge.maxBudget} USDC** to proceed. This demonstrates the micropayment flow where APIs return payment challenges instead of service responses.
 
 **What happens next in a real implementation:**
 
 1. Nexus SDK creates intent with challenge parameters
-2. Funds locked in escrow across blockchains  
+2. Funds locked in escrow across blockchains
 3. Request retried with Payment-Evidence header
 4. Gateway validates payment & processes AI request
 5. Provider generates signed usage receipt
@@ -86,7 +132,9 @@ Your AI request needs **${challenge.maxBudget} USDC** to proceed. This demonstra
         message: '❌ Demo failed. Check console for details.'
       });
     } finally {
-      setAiLoading(false);
+      if (!testMode) {
+        setAiLoading(false);
+      }
     }
   };
 
