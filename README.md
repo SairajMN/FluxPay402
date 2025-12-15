@@ -46,8 +46,8 @@ FluxPay Nexus enables trust-minimized, real-time micropayments for AI and API se
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/your-org/fluxpay-nexus.git
-cd fluxpay-nexus
+git clone https://github.com/SairajMN/FluxPay402.git
+cd FluxPay402
 ```
 
 2. **Install dependencies**
@@ -119,24 +119,42 @@ fetch('/api/ai/chat', {
 ## 📁 Project Structure
 
 ```
-fluxpay-nexus/
+FluxPay402/
 ├── contracts/              # Solidity smart contracts
 │   ├── FluxPayAudit.sol    # Settlement audit trail
 │   └── ProviderRegistry.sol # Provider management
-├── backend/                # Node.js server components
-│   ├── gateway.js          # x402 HTTP server
+├── backend/                # Core backend services
+│   ├── gateway.js          # x402 HTTP server (main entry point)
 │   ├── nexusAdapter.js     # Avail Nexus integration
 │   ├── openRouterProxy.js  # OpenRouter AI metering
 │   └── receiptVerifier.js  # Cryptographic validation
-├── frontend/               # React dashboard
-│   ├── dashboard.jsx       # User dashboard
-│   └── provider.jsx        # Provider dashboard
+├── api/                    # API endpoints
+│   ├── ai/
+│   │   └── chat.js         # AI chat endpoint with x402 payment
+│   ├── gateway.js          # API gateway handler
+│   ├── test-payment.js     # Payment testing utilities
+│   └── user/[address]/
+│       └── balance.js      # User balance queries
+├── frontend/               # React web application
+│   ├── public/             # Static assets
+│   ├── src/
+│   │   ├── dashboard.jsx   # User/provider dashboard
+│   │   ├── index.js        # Main React entry point
+│   │   ├── wallet.js       # Wallet utilities
+│   │   └── WalletConnect.jsx # Web3 wallet integration
+│   └── package.json        # Frontend dependencies
 ├── docs/                   # Documentation
 │   ├── architecture.md     # System architecture
 │   ├── money-flow.md       # Payment flow details
-│   └── security.md         # Security & trust minimization
-└── pitch/                  # 10-slide pitch deck
-    └── FluxPay-Nexus-Deck.md
+│   ├── security.md         # Security & trust minimization
+│   └── x402-nexus-guide.md # x402 & Nexus integration guide
+├── scripts/                # Deployment and utility scripts
+│   └── deploy.js           # Smart contract deployment
+├── test/                   # Smart contract tests
+│   ├── FluxPayAudit.test.js
+│   ├── NexusAdapter.test.js
+│   └── ProviderRegistry.test.js
+└── package.json            # Root dependencies and scripts
 ```
 
 ## 🛠️ Development Roadmap
@@ -195,6 +213,43 @@ fluxpay-nexus/
 - **Failure Refunds**: Service errors guarantee 100% refunds
 - **Overpayment Refunds**: Exact usage settled, remainder returned
 
+## 🔄 Development Workflow
+
+### Local Development
+1. **Start development environment**
+```bash
+# Terminal 1: Backend (with auto-reload)
+npm run dev
+
+# Terminal 2: Frontend (with hot reload)
+npm run start:frontend
+```
+
+2. **Deploy contracts for testing**
+```bash
+npx hardhat run scripts/deploy.js --network localhost
+```
+
+3. **Test contract changes**
+```bash
+npm test
+```
+
+### Contract Development
+- Edit `.sol` files in `contracts/` directory
+- Deploy with `npx hardhat run scripts/deploy.js --network <NETWORK>`
+- Test with `npm test`
+
+### Backend/Frontend Development
+- Backend: Edit files in `backend/` and `api/`
+- Frontend: Edit files in `frontend/src/`
+- Changes auto-reload with `npm run dev` / `npm run start:frontend`
+
+### Deployment
+- **Contracts**: Use `scripts/deploy.js` with appropriate network
+- **Full app**: Deploy to Vercel/Netlify via GitHub integration
+- **Contracts**: Update `.env` with new contract addresses after deployment
+
 ## 📈 Business Model
 
 ### Revenue Streams
@@ -224,27 +279,23 @@ fluxpay-nexus/
 
 ### Testing
 ```bash
-# Unit tests
-npm run test:unit
+# Run smart contract tests (Hardhat)
+npm test
 
-# Integration tests
-npm run test:integration
+# Run frontend tests (React)
+npm run start:frontend && cd frontend && npm test
 
-# End-to-end tests
-npm run test:e2e
+# Manual testing with local deployment
+npm run deploy:contracts  # Deploy to localhost network
+npm run dev              # Start backend
+# Use frontend or API clients to test
 ```
 
 ## 📞 Contact & Resources
 
-- **Website**: [https://fluxpay402.vercel.app/] ()
+- **Website**: [Fluxpay] (https://fluxpay402.vercel.app/)
 - **Documentation**: See `docs/` directory
-- **Pitch Deck**: `pitch/FluxPay-Nexus-Deck.md`
 - **Team**: [@sairaj](https://github.com/SairajMN) - Lead Developer
-
-### Community
-- **Twitter**: [@FluxPayNexus](https://twitter.com/FluxPayNexus)
-- **Discord**: [FluxPay Nexus Community](https://discord.gg/fluxpay)
-- **Telegram**: [t.me/fluxpay](https://t.me/fluxpay)
 
 ## 📄 License
 
